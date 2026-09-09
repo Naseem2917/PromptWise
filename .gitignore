@@ -7,18 +7,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build
 node_modules
 dist
 dist-ssr
+
+# Environment variables & secrets
 *.local
+.dev.vars*
+.env*
+!.env.example
+
+# Cloudflare Wrangler cache
+.wrangler
+
+# Local utility scripts
+copy-logo.js
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
