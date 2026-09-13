@@ -1,14 +1,21 @@
 import type { AnalyzeResponse, ImproveResponse, QuestionAnswers, ScoreBreakdown } from '../types'
 
+export type ResponseMode = 'low' | 'medium' | 'high'
+
 // Same origin — Vite dev server proxies /api/* to the Worker locally;
 // in production the Cloudflare Worker serves both static assets and the API.
 const API_BASE = ''
 
-export async function analyzePrompt(prompt: string): Promise<AnalyzeResponse> {
+export async function analyzePrompt(
+  prompt: string,
+  mode: ResponseMode,
+  clarification?: string,
+): Promise<AnalyzeResponse> {
   const res = await fetch(`${API_BASE}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    // mode is passed for flow/state consistency — Worker ignores it for model selection
+    body: JSON.stringify({ prompt, mode, clarification }),
   })
 
   const json = await res.json() as { success?: boolean; data?: AnalyzeResponse; error?: string }
@@ -25,11 +32,13 @@ export async function improvePrompt(
   answers: QuestionAnswers,
   scoreBefore: number,
   scoreBreakdown: ScoreBreakdown,
+  mode: ResponseMode,
+  clarifications?: string[],
 ): Promise<ImproveResponse> {
   const res = await fetch(`${API_BASE}/api/improve`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ originalPrompt, answers, scoreBefore, scoreBreakdown }),
+    body: JSON.stringify({ originalPrompt, answers, scoreBefore, scoreBreakdown, mode, clarifications }),
   })
 
   const json = await res.json() as { success?: boolean; data?: ImproveResponse; error?: string }

@@ -303,12 +303,12 @@ export function Learn() {
             </div>
 
             {/* Anatomy of a Good Prompt */}
-            <div className="glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08]">
+            <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.08]">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">🧬</span>
-                <h2 className="text-xl font-bold text-slate-100">Anatomy of an Effective Prompt</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Anatomy of an Effective Prompt</h2>
               </div>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
                 A great prompt follows a formula rather than arbitrary luck:
               </p>
 
@@ -316,13 +316,13 @@ export function Learn() {
                 {ANATOMY_FORMULA.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col justify-between"
+                    className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] flex flex-col justify-between"
                   >
                     <div>
-                      <span className="text-xs font-black text-indigo-400 px-2 py-0.5 rounded bg-indigo-500/10 inline-block mb-1.5">
+                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 inline-block mb-1.5">
                         {item.name}
                       </span>
-                      <p className="text-xs text-slate-300 leading-relaxed">{item.desc}</p>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -343,56 +343,56 @@ export function Learn() {
             {CORE_MODULES.map((module) => (
               <div
                 key={module.id}
-                className="glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08] hover:border-indigo-500/30 transition-all duration-300"
+                className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.08] hover:border-indigo-500/30 transition-all duration-300"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-3xl">{module.icon}</span>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-100">{module.title}</h2>
-                    <p className="text-slate-400 text-sm">{module.summary}</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{module.title}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">{module.summary}</p>
                   </div>
                 </div>
 
                 {/* Before / After Comparison */}
                 <div className="grid md:grid-cols-2 gap-4 mt-6">
                   {/* Bad Prompt */}
-                  <div className="rounded-xl bg-red-500/[0.04] border border-red-500/20 p-4">
+                  <div className="rounded-xl bg-red-50 dark:bg-red-500/[0.04] border border-red-200 dark:border-red-500/20 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-red-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">
                         ❌ Weak Prompt
                       </span>
                     </div>
-                    <p className="text-slate-300 text-sm font-mono bg-black/30 p-2.5 rounded-lg mb-2">
+                    <p className="text-slate-800 dark:text-slate-200 text-sm font-mono bg-white dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] p-2.5 rounded-lg mb-2">
                       "{module.badPrompt}"
                     </p>
-                    <p className="text-xs text-slate-500">Why it fails: {module.badReason}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Why it fails: {module.badReason}</p>
                   </div>
 
                   {/* Good Prompt */}
-                  <div className="rounded-xl bg-emerald-500/[0.04] border border-emerald-500/20 p-4">
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-500/[0.04] border border-emerald-200 dark:border-emerald-500/20 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
                         ✅ PromptWise Standard
                       </span>
                       <button
                         onClick={() => copyToClipboard(module.goodPrompt, module.id)}
-                        className="text-xs text-slate-400 hover:text-emerald-300 transition-colors cursor-pointer"
+                        className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors cursor-pointer"
                       >
                         {copiedId === module.id ? 'Copied!' : 'Copy'}
                       </button>
                     </div>
-                    <p className="text-slate-200 text-sm font-mono bg-black/30 p-2.5 rounded-lg mb-2">
+                    <p className="text-slate-800 dark:text-slate-200 text-sm font-mono bg-white dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] p-2.5 rounded-lg mb-2">
                       "{module.goodPrompt}"
                     </p>
-                    <p className="text-xs text-slate-500">Why it works: {module.goodReason}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Why it works: {module.goodReason}</p>
                   </div>
                 </div>
 
                 {/* Pro Tips & Action */}
-                <div className="mt-5 pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="mt-5 pt-4 border-t border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-start gap-2">
-                    <span className="text-amber-400 text-sm">💡</span>
-                    <ul className="text-xs text-slate-400 space-y-1">
+                    <span className="text-amber-500 dark:text-amber-400 text-sm">💡</span>
+                    <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
                       {module.tips.map((tip, idx) => (
                         <li key={idx}>• {tip}</li>
                       ))}
@@ -400,7 +400,7 @@ export function Learn() {
                   </div>
                   <Link
                     to={`/improve?prompt=${encodeURIComponent(module.badPrompt)}`}
-                    className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
                   >
                     Test in Improve tool →
                   </Link>
@@ -420,16 +420,16 @@ export function Learn() {
             className="space-y-4"
           >
             {COMMON_MISTAKES.map((m, i) => (
-              <div key={i} className="glass-card rounded-2xl p-6 border border-white/[0.08]">
-                <h3 className="text-base font-bold text-slate-100 mb-3">{m.title}</h3>
+              <div key={i} className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">{m.title}</h3>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-xl bg-red-500/[0.05] border border-red-500/20">
-                    <span className="text-xs text-red-400 font-semibold block mb-1">❌ Typical Vague Mistake:</span>
-                    <p className="text-xs font-mono text-slate-300">{m.mistake}</p>
+                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/[0.05] border border-red-200 dark:border-red-500/20">
+                    <span className="text-xs text-red-600 dark:text-red-400 font-semibold block mb-1">❌ Typical Vague Mistake:</span>
+                    <p className="text-xs font-mono text-slate-800 dark:text-slate-200">{m.mistake}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/20">
-                    <span className="text-xs text-emerald-400 font-semibold block mb-1">✅ How to Correct It:</span>
-                    <p className="text-xs text-slate-300">{m.fix}</p>
+                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/[0.05] border border-emerald-200 dark:border-emerald-500/20">
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold block mb-1">✅ How to Correct It:</span>
+                    <p className="text-xs text-slate-800 dark:text-slate-200">{m.fix}</p>
                   </div>
                 </div>
               </div>
@@ -449,33 +449,33 @@ export function Learn() {
             {ADVANCED_TECHNIQUES.map((tech, i) => (
               <div
                 key={i}
-                className="glass-card rounded-2xl p-6 border border-white/[0.08] flex flex-col justify-between"
+                className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08] flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <h3 className="text-lg font-bold text-slate-100">{tech.title}</h3>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{tech.title}</h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 font-medium">
                       {tech.tag}
                     </span>
                   </div>
-                  <p className="text-slate-400 text-sm mb-4 leading-relaxed">{tech.desc}</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">{tech.desc}</p>
                   <div className="relative">
-                    <pre className="text-xs font-mono text-slate-300 bg-black/40 p-3.5 rounded-xl border border-white/[0.06] whitespace-pre-wrap overflow-x-auto leading-relaxed">
+                    <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-black/40 p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.06] whitespace-pre-wrap overflow-x-auto leading-relaxed">
                       {tech.example}
                     </pre>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                <div className="mt-5 pt-3 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between">
                   <button
                     onClick={() => copyToClipboard(tech.example, `adv-${i}`)}
-                    className="text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
                     {copiedId === `adv-${i}` ? '✅ Copied to clipboard' : '📋 Copy template'}
                   </button>
                   <Link
                     to={`/improve?prompt=${encodeURIComponent(tech.example)}`}
-                    className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
                   >
                     Try this →
                   </Link>

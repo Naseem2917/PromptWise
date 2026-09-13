@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type {
   WorkflowStep,
@@ -6,8 +6,11 @@ import type {
   ImproveResponse,
   QuestionAnswers,
   ScoreBreakdown,
+  Question,
 } from '../types'
 import { analyzePrompt, improvePrompt } from '../lib/api'
+import type { ResponseMode } from '../lib/api'
+import { isObviousGarbage } from '../lib/validation'
 import { useSearchParams } from 'react-router-dom'
 import { PromptInput } from '../components/improve/PromptInput'
 import { StepIndicator } from '../components/improve/StepIndicator'
@@ -20,6 +23,12 @@ import { Spinner } from '../components/ui/Spinner'
 import { useAuth } from '../contexts/AuthContext'
 import { savePrompt, toggleSavePrompt } from '../lib/db'
 import { signInWithGoogle } from '../lib/auth'
+
+const GENERIC_CLARIFICATION_QUESTION: Question = {
+  id: 'clarification',
+  question: 'What would you like me to help you create or figure out?',
+  type: 'text',
+}
 
 // ── Loading overlay ───────────────────────────────────────────────────────────
 function LoadingState({ message }: { message: string }) {
@@ -46,7 +55,15 @@ export function Improve() {
   const [searchParams] = useSearchParams()
   const initialPromptFromUrl = searchParams.get('prompt') ?? ''
   const [step, setStep] = useState<WorkflowStep>('input')
+  const [mode, setMode] = useState<ResponseMode>('medium')
   const [originalPrompt, setOriginalPrompt] = useState(initialPromptFromUrl)
+  const [clarifications, setClarifications] = useState<string[]>([])
+
+  useEffect(() => {
+    if (initialPromptFromUrl) {
+      setOriginalPrompt(initialPromptFromUrl)
+    }
+  }, [initialPromptFromUrl])
   const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResponse | null>(null)
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
   const [answers, setAnswers] = useState<QuestionAnswers>({})
@@ -56,18 +73,27 @@ export function Improve() {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // ── Generate improved prompt ─────────────────────────────────────────────
+  // ── Generate improved prompt (Stage C: Final Improvement) ─────────────────
   const generateImproved = useCallback(
     async (
       prompt: string,
+      collectedClarifications: string[],
       collectedAnswers: QuestionAnswers,
       scoreBefore: number,
       scoreBreakdown: ScoreBreakdown,
+      selectedMode: ResponseMode,
     ) => {
       setStep('improving')
       setError(null)
       try {
-        const result = await improvePrompt(prompt, collectedAnswers, scoreBefore, scoreBreakdown)
+        const result = await improvePrompt(
+          prompt,
+          collectedAnswers,
+          scoreBefore,
+          scoreBreakdown,
+          selectedMode,
+          collectedClarifications,
+        )
         setImproveResult(result)
         setStep('results')
 
@@ -93,28 +119,43 @@ export function Improve() {
     [user],
   )
 
-  // ── Handle prompt submit ─────────────────────────────────────────────────
+  // ── Handle prompt submit (Stage A: Initial Verification) ──────────────────
   const handlePromptSubmit = useCallback(
-    async (prompt: string) => {
+    async (prompt: string, selectedMode: ResponseMode) => {
+      setMode(selectedMode)               // store once — not asked again
       setOriginalPrompt(prompt)
+      setClarifications([])
       setAnswers({})
       setCurrentQuestionIdx(0)
       setAnalyzeResult(null)
       setImproveResult(null)
       setSavedPromptId(null)
       setIsBookmarked(false)
-      setStep('analyzing')
       setError(null)
 
+      // 1. Lightweight local garbage check
+      if (isObviousGarbage(prompt)) {
+        // 0 Gemini API calls! Show generic clarification
+        setStep('clarification')
+        return
+      }
+
+      // 2. Not obvious garbage -> Call Gemini Analyze (API Call 1)
+      setStep('analyzing')
+
       try {
-        const result = await analyzePrompt(prompt)
+        const result = await analyzePrompt(prompt, selectedMode)
         setAnalyzeResult(result)
 
-        if (result.needsQuestions && result.questions.length > 0) {
+        if (result.status === 'needs_clarification') {
+          // Gemini decided prompt is vague/unclear
+          setStep('clarification')
+        } else if (result.needsQuestions && result.questions && result.questions.length > 0) {
+          // Verified -> Stage B (verified follow-up questions)
           setStep('questions')
         } else {
-          // Enough info — skip questions
-          await generateImproved(prompt, {}, result.scoreBefore, result.scoreBreakdown)
+          // Verified and already comprehensive -> proceed directly to Stage C
+          await generateImproved(prompt, [], {}, result.scoreBefore, result.scoreBreakdown, selectedMode)
         }
       } catch (err: unknown) {
         setError((err as Error).message)
@@ -124,9 +165,70 @@ export function Improve() {
     [generateImproved],
   )
 
-  // ── Handle question answer ───────────────────────────────────────────────
-  const handleAnswer = useCallback(
+  // ── Handle clarification answer (Stage A: Verification Loop) ──────────────
+  const handleClarificationAnswer = useCallback(
+    async (answer: string) => {
+      const trimmed = answer.trim()
+
+      // 1. Lightweight local check on clarification answer
+      if (isObviousGarbage(trimmed)) {
+        // 0 Gemini API calls! Stay in clarification loop
+        setError('Please describe what you would like to create or accomplish.')
+        return
+      }
+
+      setError(null)
+
+      // 2. Call Gemini Analyze with this candidate clarification prompt directly.
+      // The last prompt that Gemini verifies is the true "Original Prompt".
+      setStep('analyzing')
+      try {
+        const result = await analyzePrompt(trimmed, mode)
+        setAnalyzeResult(result)
+
+        if (result.status === 'needs_clarification') {
+          // Still unclear -> stay in clarification loop
+          setError('Please provide more detail about what you want to create or figure out.')
+          setStep('clarification')
+        } else if (result.needsQuestions && result.questions && result.questions.length > 0) {
+          // Verified! This clear prompt is now officially our Original Prompt!
+          setOriginalPrompt(trimmed)
+          setClarifications([])
+          setStep('questions')
+        } else {
+          // Verified and complete -> proceed directly to Stage C (improvement)
+          setOriginalPrompt(trimmed)
+          setClarifications([])
+          await generateImproved(
+            trimmed,
+            [],
+            {},
+            result.scoreBefore,
+            result.scoreBreakdown,
+            mode,
+          )
+        }
+      } catch (err: unknown) {
+        setError((err as Error).message)
+        setStep('clarification')
+      }
+    },
+    [mode, generateImproved],
+  )
+
+  // ── Handle verified follow-up question answer (Stage B) ───────────────────
+  // CRITICAL RULE: In this verified state, NEVER call Gemini to validate answers!
+  const handleFollowUpAnswer = useCallback(
     async (id: string, answer: string | string[]) => {
+      // Local check only for non-empty text answers (allow empty string for skip)
+      if (typeof answer === 'string' && answer.trim().length > 0) {
+        if (isObviousGarbage(answer)) {
+          setError('Please provide a meaningful answer to continue.')
+          return
+        }
+      }
+
+      setError(null)
       const newAnswers = { ...answers, [id]: answer }
       setAnswers(newAnswers)
 
@@ -136,21 +238,25 @@ export function Improve() {
       if (nextIdx < questions.length) {
         setCurrentQuestionIdx(nextIdx)
       } else {
+        // All follow-up questions answered! Call Stage C (Final Improvement API Call)
         await generateImproved(
           originalPrompt,
+          clarifications,
           newAnswers,
           analyzeResult!.scoreBefore,
           analyzeResult!.scoreBreakdown,
+          mode,
         )
       }
     },
-    [answers, analyzeResult, currentQuestionIdx, generateImproved, originalPrompt],
+    [answers, analyzeResult, currentQuestionIdx, generateImproved, originalPrompt, clarifications, mode],
   )
 
   // ── Reset ────────────────────────────────────────────────────────────────
   const handleReset = () => {
     setStep('input')
     setOriginalPrompt('')
+    setClarifications([])
     setAnalyzeResult(null)
     setImproveResult(null)
     setAnswers({})
@@ -221,6 +327,7 @@ export function Improve() {
   const totalSteps = 3
   const stepIndex: Record<WorkflowStep, number> = {
     input: 0,
+    clarification: 1,
     analyzing: 1,
     questions: 1,
     improving: 2,
@@ -275,7 +382,35 @@ export function Improve() {
                 </p>
               </div>
 
-              <PromptInput onSubmit={handlePromptSubmit} defaultValue={initialPromptFromUrl} />
+              <PromptInput onSubmit={handlePromptSubmit} defaultValue={originalPrompt} defaultMode={mode} />
+            </motion.div>
+          )}
+
+          {/* Clarification (Stage A Verification Loop) */}
+          {step === 'clarification' && (
+            <motion.div
+              key="clarification"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="mb-6 text-center">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider">
+                  Clarification Needed
+                </span>
+              </div>
+
+              <QuestionCard
+                question={GENERIC_CLARIFICATION_QUESTION}
+                questionNumber={1}
+                totalQuestions={1}
+                onAnswer={(_, ans) =>
+                  handleClarificationAnswer(typeof ans === 'string' ? ans : ans.join(' '))
+                }
+                hideSkip={true}
+                submitButtonText="Continue →"
+              />
             </motion.div>
           )}
 
@@ -311,7 +446,7 @@ export function Improve() {
                 question={analyzeResult.questions[currentQuestionIdx]}
                 questionNumber={currentQuestionIdx + 1}
                 totalQuestions={questionCount}
-                onAnswer={handleAnswer}
+                onAnswer={handleFollowUpAnswer}
               />
             </motion.div>
           )}
@@ -397,7 +532,12 @@ export function Improve() {
 
               {/* Feedback */}
               <div className="glass-card rounded-2xl">
-                <FeedbackWidget promptId={savedPromptId ?? undefined} userId={user?.uid} />
+                <FeedbackWidget
+                  promptId={savedPromptId ?? undefined}
+                  userId={user?.uid}
+                  originalPrompt={originalPrompt}
+                  improvedPrompt={improveResult.improvedPrompt}
+                />
               </div>
 
               {/* Try another */}

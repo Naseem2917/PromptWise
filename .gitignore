@@ -6,20 +6,27 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
+firestore-debug.log*
 
 # Dependencies & Build
 node_modules
 dist
 dist-ssr
+.vite
+*.tsbuildinfo
 
 # Environment variables & secrets
 *.local
 .dev.vars*
 .env*
 !.env.example
+*.pem
+*.key
 
-# Cloudflare Wrangler cache
+# Cloudflare & Firebase cache
 .wrangler
+.firebase
 
 # Local utility scripts
 copy-logo.js
@@ -38,3 +45,4 @@ copy-logo.js
 .DS_Store
 Thumbs.db
 ehthumbs.db
+Desktop.ini

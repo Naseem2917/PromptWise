@@ -8,6 +8,8 @@ interface QuestionCardProps {
   questionNumber: number
   totalQuestions: number
   onAnswer: (id: string, answer: string | string[]) => void
+  hideSkip?: boolean
+  submitButtonText?: string
 }
 
 export function QuestionCard({
@@ -15,6 +17,8 @@ export function QuestionCard({
   questionNumber,
   totalQuestions,
   onAnswer,
+  hideSkip = false,
+  submitButtonText,
 }: QuestionCardProps) {
   const [singleSelected, setSingleSelected] = useState<string>('')
   const [multiSelected, setMultiSelected] = useState<string[]>([])
@@ -75,8 +79,8 @@ export function QuestionCard({
         {/* Question */}
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-7">{question.question}</h3>
 
-        {/* ── Single Choice ───────────────────────────────────────────── */}
-        {question.type === 'single_choice' && (
+        {/* ── Single Choice / Options ──────────────────────────────────── */}
+        {(question.type === 'single_choice' || question.type === 'options') && (
           <div className="grid gap-3">
             {question.options?.map((opt) => (
               <button
@@ -162,11 +166,13 @@ export function QuestionCard({
         {/* Actions */}
         <div className="flex items-center gap-3 mt-8">
           <Button onClick={handleSubmit} disabled={!canProceed}>
-            {isLast ? '✨ Generate Improved Prompt' : 'Next →'}
+            {submitButtonText ?? (isLast ? '✨ Generate Improved Prompt' : 'Next →')}
           </Button>
-          <Button variant="ghost" onClick={() => onAnswer(question.id, '')}>
-            Skip
-          </Button>
+          {!hideSkip && (
+            <Button variant="ghost" onClick={() => onAnswer(question.id, '')}>
+              Skip
+            </Button>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

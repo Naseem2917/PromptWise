@@ -5,9 +5,16 @@ import { saveFeedback } from '../../lib/db'
 interface FeedbackWidgetProps {
   promptId?: string
   userId?: string
+  originalPrompt?: string
+  improvedPrompt?: string
 }
 
-export function FeedbackWidget({ promptId, userId }: FeedbackWidgetProps) {
+export function FeedbackWidget({
+  promptId,
+  userId,
+  originalPrompt,
+  improvedPrompt,
+}: FeedbackWidgetProps) {
   const [rating, setRating] = useState<'up' | 'down' | null>(null)
   const [comment, setComment] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -18,7 +25,10 @@ export function FeedbackWidget({ promptId, userId }: FeedbackWidgetProps) {
       userId,
       promptId,
       rating: r,
-      message: '',
+      category: 'Prompt Quality & AI Results',
+      message: r === 'up' ? 'Helpful (👍 Yes)' : 'Not helpful (👎 No)',
+      originalPrompt,
+      improvedPrompt,
     }).catch(console.error)
   }
 
@@ -28,7 +38,12 @@ export function FeedbackWidget({ promptId, userId }: FeedbackWidgetProps) {
         userId,
         promptId,
         rating,
-        message: comment,
+        category: 'Prompt Quality & AI Results',
+        message: comment.trim()
+          ? `${rating === 'up' ? '👍 Yes' : '👎 No'}: ${comment.trim()}`
+          : (rating === 'up' ? 'Helpful (👍 Yes)' : 'Not helpful (👎 No)'),
+        originalPrompt,
+        improvedPrompt,
       }).catch(console.error)
     }
     setSubmitted(true)

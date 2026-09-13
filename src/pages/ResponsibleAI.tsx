@@ -125,16 +125,16 @@ export function ResponsibleAI() {
                   <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{principle.subtitle}</p>
                 </div>
               </div>
-              <p className="text-slate-400 text-xs sm:text-sm my-3 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm my-3 leading-relaxed">
                 {principle.description}
               </p>
 
               <div className="space-y-3 mt-4">
                 <div className="bg-emerald-500/[0.05] border border-emerald-500/20 rounded-xl p-3">
-                  <span className="text-xs font-bold text-emerald-400 block mb-1.5">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mb-1.5">
                     ✅ Do This:
                   </span>
-                  <ul className="space-y-1 text-xs text-slate-300">
+                  <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
                     {principle.dos.map((d, idx) => (
                       <li key={idx}>• {d}</li>
                     ))}
@@ -142,10 +142,10 @@ export function ResponsibleAI() {
                 </div>
 
                 <div className="bg-red-500/[0.05] border border-red-500/20 rounded-xl p-3">
-                  <span className="text-xs font-bold text-red-400 block mb-1.5">
+                  <span className="text-xs font-bold text-red-600 dark:text-red-400 block mb-1.5">
                     ❌ Avoid This:
                   </span>
-                  <ul className="space-y-1 text-xs text-slate-300">
+                  <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
                     {principle.donts.map((d, idx) => (
                       <li key={idx}>• {d}</li>
                     ))}
@@ -158,18 +158,18 @@ export function ResponsibleAI() {
       </div>
 
       {/* Interactive Safety Checklist */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08]">
+      <div className="glass-card rounded-2xl p-6 sm:p-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-slate-100">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               📋 Pre-Flight Prompt Safety Checklist
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Run through these 5 checks before sending any mission-critical prompt to production.
             </p>
           </div>
           {allChecked && (
-            <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+            <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-semibold">
               All Clear! 🚀
             </span>
           )}
@@ -184,15 +184,15 @@ export function ResponsibleAI() {
                 onClick={() => toggleCheck(idx)}
                 className={`w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm flex items-center gap-3 transition-colors cursor-pointer ${
                   isChecked
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
-                    : 'bg-white/[0.03] border-white/[0.06] text-slate-300 hover:border-white/20'
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-200'
+                    : 'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20'
                 }`}
               >
                 <div
                   className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 text-xs font-bold ${
                     isChecked
                       ? 'bg-emerald-500 border-emerald-500 text-black'
-                      : 'border-white/30 text-transparent'
+                      : 'border-slate-300 dark:border-white/30 text-transparent'
                   }`}
                 >
                   ✓
@@ -203,17 +203,17 @@ export function ResponsibleAI() {
           })}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-white/[0.06] text-xs">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/[0.06] text-xs">
           <button
             onClick={() => setCheckedItems({})}
-            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+            className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors cursor-pointer"
           >
             Reset checklist
           </button>
 
           <Link
             to="/improve"
-            className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors flex items-center gap-1"
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-semibold transition-colors flex items-center gap-1"
           >
             <span>Apply to PromptWise Improve</span>
             <span>→</span>

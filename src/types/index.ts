@@ -1,5 +1,5 @@
 // Question types supported by the AI
-export type QuestionType = 'single_choice' | 'multi_choice' | 'text' | 'toggle'
+export type QuestionType = 'single_choice' | 'multi_choice' | 'text' | 'toggle' | 'options'
 
 // A single follow-up question from the AI
 export interface Question {
@@ -21,6 +21,7 @@ export interface ScoreBreakdown {
 
 // Response from POST /api/analyze
 export interface AnalyzeResponse {
+  status?: 'valid' | 'needs_clarification'
   needsQuestions: boolean
   scoreBefore: number
   scoreBreakdown: ScoreBreakdown
@@ -45,4 +46,10 @@ export interface ImproveResponse {
 export type QuestionAnswers = Record<string, string | string[]>
 
 // Workflow step state machine
-export type WorkflowStep = 'input' | 'analyzing' | 'questions' | 'improving' | 'results'
+export type WorkflowStep =
+  | 'input'
+  | 'analyzing'
+  | 'clarification'
+  | 'questions'
+  | 'improving'
+  | 'results'

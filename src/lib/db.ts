@@ -4,6 +4,7 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
   updateDoc,
   doc,
   serverTimestamp,
@@ -34,6 +35,8 @@ export interface FeedbackRecord {
   message: string
   category?: string
   email?: string
+  originalPrompt?: string
+  improvedPrompt?: string
 }
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -162,4 +165,78 @@ export async function getLatestQuizScore(userId: string): Promise<number | null>
     console.error('Error fetching quiz score:', err)
     return null
   }
+}
+
+// ── Admin-only queries (Firestore rules enforce email check server-side) ──────
+
+export interface AdminFeedbackRecord {
+  id: string
+  category?: string
+  rating?: 'up' | 'down' | number | string
+  message: string
+  email?: string
+  originalPrompt?: string
+  improvedPrompt?: string
+  promptId?: string
+  createdAt: Timestamp | null
+}
+
+export interface AdminUserRecord {
+  id: string
+  name?: string
+  email?: string
+  createdAt: Timestamp | null
+}
+
+export interface AdminQuizResult {
+  id: string
+  score: number
+  total: number
+  percentage: number
+  createdAt: Timestamp | null
+}
+
+/** Fetch all feedback (admin only — Firestore rules enforce email restriction) */
+export async function getAllFeedback(): Promise<AdminFeedbackRecord[]> {
+  const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => {
+    const data = d.data()
+    return {
+      id: d.id,
+      category: data.category,
+      rating: data.rating,
+      message: data.message,
+      email: data.email,
+      originalPrompt: data.originalPrompt,
+      improvedPrompt: data.improvedPrompt,
+      promptId: data.promptId,
+      createdAt: data.createdAt ?? null,
+    }
+  })
+}
+
+/** Fetch all users (admin only) */
+export async function getAllUsers(): Promise<AdminUserRecord[]> {
+  const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({
+    id: d.id,
+    name: d.data().name,
+    email: d.data().email,
+    createdAt: d.data().createdAt ?? null,
+  }))
+}
+
+/** Fetch all quiz results (admin only) */
+export async function getAllQuizResults(): Promise<AdminQuizResult[]> {
+  const q = query(collection(db, 'quizResults'), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({
+    id: d.id,
+    score: d.data().score,
+    total: d.data().total,
+    percentage: d.data().percentage,
+    createdAt: d.data().createdAt ?? null,
+  }))
 }

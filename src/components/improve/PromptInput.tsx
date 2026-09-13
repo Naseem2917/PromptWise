@@ -1,20 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '../ui/Button'
+import type { ResponseMode } from '../../lib/api'
+
+// ── Mode config ────────────────────────────────────────────────────────────────
+
+const MODES: { value: ResponseMode; icon: string; label: string; desc: string }[] = [
+  { value: 'low',    icon: '⚡', label: 'Low',    desc: 'Faster response'   },
+  { value: 'medium', icon: '⚖️', label: 'Medium', desc: 'Balanced'          },
+  { value: 'high',   icon: '🧠', label: 'High',   desc: 'Deeper analysis'   },
+]
 
 interface PromptInputProps {
-  onSubmit: (prompt: string) => void
+  onSubmit: (prompt: string, mode: ResponseMode) => void
   isLoading?: boolean
   error?: string | null
   defaultValue?: string
+  defaultMode?: ResponseMode
 }
 
-export function PromptInput({ onSubmit, isLoading = false, error, defaultValue = '' }: PromptInputProps) {
+export function PromptInput({
+  onSubmit,
+  isLoading = false,
+  error,
+  defaultValue = '',
+  defaultMode = 'medium',
+}: PromptInputProps) {
   const [value, setValue] = useState(defaultValue)
+  const [mode, setMode] = useState<ResponseMode>(defaultMode)
+
+  useEffect(() => {
+    setValue(defaultValue)
+  }, [defaultValue])
+
+  useEffect(() => {
+    setMode(defaultMode)
+  }, [defaultMode])
 
   const handleSubmit = () => {
     const trimmed = value.trim()
-    if (trimmed && !isLoading) onSubmit(trimmed)
+    if (trimmed && !isLoading) onSubmit(trimmed, mode)
   }
 
   return (
@@ -53,6 +78,39 @@ export function PromptInput({ onSubmit, isLoading = false, error, defaultValue =
               Clear
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ── Response Mode Selector ─────────────────────────────────────────── */}
+      <div className="mt-5">
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2.5 px-0.5">
+          Response Mode
+        </p>
+        <div className="flex items-stretch gap-2">
+          {MODES.map((m) => {
+            const isSelected = mode === m.value
+            return (
+              <button
+                key={m.value}
+                onClick={() => setMode(m.value)}
+                disabled={isLoading}
+                className={[
+                  'flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer min-h-[56px] select-none',
+                  isSelected
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/30'
+                    : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-indigo-500/60 hover:text-indigo-600 dark:hover:text-indigo-300',
+                ].join(' ')}
+              >
+                <span className="text-base leading-none">{m.icon} {m.label}</span>
+                <span className={[
+                  'text-[10px] font-normal leading-none',
+                  isSelected ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500',
+                ].join(' ')}>
+                  {m.desc}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 

@@ -2,20 +2,29 @@
 ### *Ask Better. Learn Better.*
 
 <div align="center">
-  <img src="public/logo.png" alt="PromptWise Logo" width="128" height="128" style="border-radius: 28px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);" />
+  <img src="public/Icon.png" alt="PromptWise Logo" width="128" height="128" />
 
   <p align="center">
-    <strong>An intelligent AI literacy and prompt engineering platform designed for students and creators.</strong><br />
-    Stop getting mediocre answers from AI. Learn how to craft structured, high-impact prompts through interactive follow-ups and real-time diagnostic scoring.
+    <strong>An intelligent AI literacy and prompt engineering platform designed for students, researchers, and creators.</strong><br />
+    Stop getting mediocre, surface-level answers from AI. Master how to craft structured, high-impact prompts through intelligent Socratic follow-ups, real-time diagnostic scoring, interactive practice arenas, and PWA capabilities.
   </p>
 
   <p align="center">
-    <a href="#key-features">Key Features</a> •
-    <a href="#how-it-works">How It Works</a> •
-    <a href="#system-architecture">Architecture</a> •
-    <a href="#tech-stack">Tech Stack</a> •
-    <a href="#getting-started">Getting Started</a> •
-    <a href="#deployment">Deployment</a>
+    <a href="https://promptwise.naseem2917.workers.dev/"><strong>🌐 Live Demo: promptwise.naseem2917.workers.dev</strong></a>
+  </p>
+
+  <p align="center">
+    <a href="#-live-demo">Live Demo</a> •
+    <a href="#-the-problem--philosophy">Philosophy</a> •
+    <a href="#-key-features">Key Features</a> •
+    <a href="#-system-architecture">Architecture</a> •
+    <a href="#-tech-stack">Tech Stack</a> •
+    <a href="#-getting-started">Getting Started</a> •
+    <a href="#-deployment">Deployment</a>
+  </p>
+
+  <p align="center">
+    <a href="https://promptwise.naseem2917.workers.dev/"><img src="https://img.shields.io/badge/Live_Demo-promptwise.naseem2917.workers.dev-success?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Live Demo" /></a>
   </p>
 
   <p align="center">
@@ -23,11 +32,23 @@
     <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css&logoColor=white" alt="Tailwind CSS v4" />
     <img src="https://img.shields.io/badge/Vite-8.x-646CFF?logo=vite&logoColor=white" alt="Vite" />
+    <img src="https://img.shields.io/badge/PWA-Ready-38B2AC?logo=pwa&logoColor=white" alt="PWA Ready" />
     <img src="https://img.shields.io/badge/Cloudflare_Workers-Serverless-F38020?logo=cloudflare&logoColor=white" alt="Cloudflare Workers" />
-    <img src="https://img.shields.io/badge/Google_Gemini-Flash_AI-4285F4?logo=google&logoColor=white" alt="Google Gemini" />
+    <img src="https://img.shields.io/badge/Google_Gemini-3.5%20Lite%20|%203.6%20Flash%20|%203.7-4285F4?logo=google&logoColor=white" alt="Google Gemini" />
     <img src="https://img.shields.io/badge/Firebase-Auth_%26_Firestore-FFCA28?logo=firebase&logoColor=black" alt="Firebase" />
   </p>
 </div>
+
+---
+
+## 🌐 Live Demo
+
+PromptWise is deployed live on Cloudflare's global edge network:
+👉 **[https://promptwise.naseem2917.workers.dev/](https://promptwise.naseem2917.workers.dev/)**
+
+- **Instant access**: No sign-in required to test prompt improvements or take quizzes.
+- **Guest Mode & Google Sign-In**: Save prompts to cloud history and track your learning progress.
+- **Install as App (PWA)**: Install directly on Android, iOS, Windows, or macOS for an offline-ready, full-screen desktop/mobile app experience.
 
 ---
 
@@ -39,104 +60,110 @@ Most students and learners use Generative AI tools (ChatGPT, Gemini, Claude, Dee
 This leads to generic, inaccurate, or superficial answers. Typical prompt "rewriters" simply slap generic buzzwords onto the prompt without knowing what the student actually needs.
 
 ### 💡 The PromptWise Approach
-> **"Don't just improve the prompt. Understand what the user actually wants first."**
+> **"Don't just rewrite the prompt. Understand what the user actually wants first."**
 
 Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
-1. It analyzes your initial prompt for ambiguities and missing context.
-2. It asks **1–4 smart, targeted follow-up questions** (e.g., target audience, coding language, specific constraints, required output format).
-3. It synthesizes your answers into a **masterfully engineered, production-ready prompt**.
-4. It teaches you **why** each change was made and breaks down your prompt's quality using a 6-parameter diagnostic score.
+1. **Stage A (Verification & Clarification)**: Analyzes your initial input. Detects gibberish/keyboard smashes locally with **0 API calls**. If vague, asks targeted clarification until clear.
+2. **Stage B (Adaptive Follow-Ups)**: Asks **0–4 smart questions** (e.g., target audience, technical depth, formatting, specific boundaries) with clickable option pills or open text (with skip support).
+3. **Stage C (Synthesis & Scoring)**: Synthesizes your answers into a **masterfully engineered, production-ready prompt**, evaluates quality (0–100) across 6 core parameters, and provides educational "What Changed & Why" explanations.
 
 ---
 
 ## ⚡ Key Features
 
 ### 1. 🛠️ Socratic Prompt Improvement Engine (`/improve`)
-- **Diagnostic Intent Extraction**: Detects the underlying domain, target persona, and missing constraints.
-- **Adaptive Follow-Up Questionnaire**: Generates dynamic multiple-choice or short-answer questions tailored to your query.
-- **Prompt Scorecard (0–100)**: Quantifies prompt quality across 5 dimensions:
-  - 🎯 **Clarity**: Is the objective unambiguous?
-  - 🔍 **Specificity**: Are details and context provided?
-  - 📐 **Constraints**: Are boundaries and tone defined?
-  - 📋 **Output Format**: Is the expected response structure outlined?
-  - 🧠 **Context Richness**: Is background knowledge included?
-- **Interactive Before & After Comparison**: Visual side-by-side preview with color-coded additions.
-- **"Why This Works" Educational Breakdown**: Teaches the prompt engineering principles behind the rewrite.
-- **1-Click Export**: Copy directly or launch into your preferred AI model.
+- **3-Stage Intelligent Architecture**:
+  - **Local Garbage Rejection (Stage A)**: Instant regex-based rejection for keyboard smashes (`asdfgh`, `xxxxx`, `qwertyuiop`, repetitive symbols) with **0 Gemini calls**. Short technical terms (`SQL`, `HTML`, `MERN`, `GPT`, `Python`) are safely preserved.
+  - **Adaptive Clarification Loop**: If prompt intent is unclear, guides the user with a single friendly question: *"What would you like me to help you create or figure out?"* The verified clear prompt replaces vague input and becomes the official prompt.
+  - **Adaptive Follow-Up Questions (Stage B)**: Dynamic choice pills or open text to extract missing context. Users can easily **Skip** optional questions.
+  - **Final Synthesis (Stage C)**: Generates a high-impact prompt with role/persona, context, specific tasks, formatting, and constraints.
+- **Response Modes**:
+  - ⚡ **Low / Fast** (`gemini-3.5-flash-lite`): Instant turnaround for quick queries.
+  - ⚖️ **Medium / Balanced** (`gemini-3.6-flash`): Ideal blend of speed and depth (Default).
+  - 🧠 **High / Deep** (`gemini-3.7-flash`): Maximum depth for advanced research, complex code, and thesis generation.
+- **Diagnostic Scorecard (0–100)**: Evaluates prompts across 6 core dimensions:
+  - 🎯 **Goal**: Clear objective defined.
+  - 🌐 **Context**: Relevant background included.
+  - 👥 **Audience**: Target reader/consumer specified.
+  - 🔍 **Specificity**: Technical/subject details provided.
+  - 📋 **Output Format**: Layout and structure outlined.
+  - 📐 **Constraints**: Negative rules and boundaries set.
+- **Before & After Visualizer**: Side-by-side comparison with one-click copy and auto-saving.
+- **"What Changed & Why" Breakdown**: Teaches students why each addition was made.
 
 ### 2. 📚 Prompt Engineering Masterclass (`/learn`)
-- **The 6 Core Building Blocks**:
-  1. **Role / Persona**: Who should the AI act as?
-  2. **Task & Objective**: What is the exact goal?
-  3. **Context & Background**: Why is this needed and who is it for?
-  4. **Step-by-Step Instructions**: How should the AI work through the problem?
-  5. **Constraints & Guardrails**: What should the AI *avoid* doing?
-  6. **Output Format & Style**: Tables, JSON, bullet points, or executive summary?
-- **Interactive Anti-Pattern Guide**: Real examples of "vague prompts", "conflicting instructions", and "overloaded contexts" with their corrections.
-- **Frameworks & Techniques**: Zero-shot, Few-shot, Chain-of-Thought (CoT), and Role-Prompting.
+- **The 6 Core Building Blocks**: Role, Objective, Context, Step-by-Step Instructions, Constraints, and Output Format.
+- **Interactive Anti-Pattern Guide**: Real examples of "vague prompts", "conflicting instructions", and "overloaded contexts" with interactive before/after fixes.
+- **Prompting Frameworks**: Zero-shot, Few-shot, Chain-of-Thought (CoT), and Role-Prompting explained simply.
 
 ### 3. 💡 Curated Examples Library (`/examples`)
-- **Real-World Student Scenarios**: Categorized examples for:
+- Categorized real-world prompt templates for:
   - 💻 Software Development & Code Debugging
   - 📝 Academic Research & Thesis Writing
   - 🧮 Mathematics & Data Science
   - 🎓 Exam Revision & Active Recall
   - 💼 Resume & Career Preparation
-- **Instant Testing**: Load any example directly into the improvement engine with one click.
-- **Full Light & Dark Mode Compatibility**: Optimized readability across all lighting environments.
+- **1-Click Testing**: Load any example directly into the improvement engine with a single tap.
 
 ### 4. 🎯 Practice Arena (`/practice`)
-- **Interactive Scenario Challenges**: Hands-on sandbox exercises with distinct student challenges.
-- **Real-Time Rubric Scoring**: AI evaluates student drafts against prompt engineering benchmarks and provides immediate improvement tips.
+- Hands-on sandbox exercises with realistic scenarios (e.g. debugging slow SQL queries, cold email rewrites, junior developer bug reports).
+- Hint system and expert solutions to verify understanding.
 
 ### 5. 🧠 Skills & Knowledge Quiz (`/quiz`)
-- **Adaptive AI Literacy Assessment**: Tests comprehension of prompting principles, token constraints, context windows, and safety rules.
-- **Rank & Badge System**: Earn rankings from *Prompt Novice* to *Prompt Architect* based on performance.
-- **Detailed Explanations**: Instant feedback on both correct and incorrect choices.
+- 6-question interactive quiz testing prompt engineering principles, token economics, and LLM behavior.
+- **`🔁 Retake Quiz` Feature**: Reset and re-attempt the exact same quiz questions to master weak spots.
+- **`🔄 New Quiz` Feature**: Fetch fresh AI-generated questions from the server.
+- Rank and proficiency scoring from *Prompt Explorer* to *Prompt Grandmaster*.
 
 ### 6. 🛡️ Responsible AI Hub (`/responsible-ai`)
-- **Academic Integrity**: How to properly cite AI contributions and avoid plagiarism.
-- **Privacy & PII Protection**: Guarding personal data, credentials, and sensitive info.
-- **Hallucination Detection**: Triangulating sources and verifying critical AI outputs.
-- **Bias & Fairness**: Recognizing model prejudices and stereotyping.
+- Academic integrity, plagiarism avoidance, citing AI contributions.
+- Privacy protection (never sharing passwords, API keys, or personal identifiable information).
+- Detecting hallucinations and verifying critical facts.
 
-### 7. 👤 Student Dashboard & Cloud Persistence (`/dashboard`)
-- **Secure Authentication**: Seamless Google OAuth & Guest Mode via Firebase Auth.
-- **Cloud History**: Every improved prompt is automatically logged to Cloud Firestore.
-- **Prompt Library & Bookmarks**: Favorite, organize, and re-export your best prompts at any time.
+### 7. 📱 Progressive Web App (PWA) & Mobile Excellence
+- Offline caching with Workbox Service Worker.
+- Installable on mobile and desktop devices with dedicated high-res icons.
+- Mobile-first bottom navigation bar and gesture-friendly cards.
 
-### 8. 🎨 UI/UX Excellence & Theming
-- **Bespoke 3D Glassmorphic Branding**: Custom AI-generated brand mark and icons.
-- **True Dual-Theme System**: Smooth transitions between crisp Slate Light Mode and deep Obsidian Dark Mode.
-- **Mobile-First Bottom Navigation**: Native app experience with touch-optimized navigation on phones and tablets.
+### 8. 🔐 Admin Feedback Center (`/admin`)
+- **Strict Privacy**: No personal user data or quiz history exposed; strictly feedback-focused.
+- **Full Prompt Context**: Displays the exact **User Prompt** and **Improved Output Shown** alongside user comments.
+- **Smart Rating Badges**: `👍 Helpful (Yes)` and `👎 Needs Improvement (No)` badges, 1-5 star ratings, and one-click copy buttons.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    PromptWise Client                        │
-│          (React 19 + TypeScript + Tailwind CSS v4)           │
-└───────────────┬─────────────────────────────┬───────────────┘
-                │                             │
-       Direct API Calls                User Auth & State
-                │                             │
-                ▼                             ▼
-┌───────────────────────────────┐   ┌─────────────────────────┐
-│     Cloudflare Worker API     │   │      Firebase SDK       │
-│  (Edge Gateway / Reverse Prox)│   │  - Google OAuth Login   │
-└───────────────┬───────────────┘   │  - Cloud Firestore      │
-                │                   │    (Saved Prompts,      │
-         Gemini API Key             │     History, Analytics) │
-                ▼                   └─────────────────────────┘
-┌───────────────────────────────┐
-│       Google Gemini AI        │
-│  (Gemini 2.5 Flash Engine)    │
-│  - Prompt Diagnostics         │
-│  - Dynamic Question Gen       │
-│  - Prompt Synthesis & Scoring │
-└───────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           PromptWise Client                             │
+│       (React 19 + TypeScript + Tailwind CSS v4 + Framer Motion)         │
+│          [ Progressive Web App with Service Worker & Caching ]          │
+└───────────────────┬─────────────────────────────────┬───────────────────┘
+                    │                                 │
+            Edge API Requests                 User Auth & Storage
+                    │                                 │
+                    ▼                                 ▼
+┌───────────────────────────────────────┐   ┌─────────────────────────────┐
+│       Cloudflare Worker Gateway       │   │        Firebase SDK         │
+│     (Single-Bundle Serverless Edge)   │   │  - Google OAuth Login       │
+│                                       │   │  - Cloud Firestore          │
+│  Endpoints:                           │   │    - Saved Prompts          │
+│  - POST /api/analyze                  │   │    - History Tracking       │
+│  - POST /api/improve                  │   │    - User Feedback          │
+│  - GET  /api/quiz                     │   └─────────────────────────────┘
+└───────────────────┬───────────────────┘
+                    │
+           Resilient Fallbacks
+        (Lite ⇄ Mid ⇄ High Chain)
+                    │
+                    ▼
+┌───────────────────────────────────────┐
+│           Google Gemini AI            │
+│  - gemini-3.5-flash-lite  (Analyze)   │
+│  - gemini-3.6-flash       (Medium)    │
+│  - gemini-3.7-flash       (High/Deep) │
+└───────────────────────────────────────┘
 ```
 
 ---
@@ -145,15 +172,15 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 
 | Layer | Technology | Description |
 |---|---|---|
-| **Frontend Framework** | **React 19** | Latest React features with concurrent rendering |
-| **Language** | **TypeScript 5** | Strict type-safety across all components and API calls |
-| **Styling** | **Tailwind CSS v4** | Next-generation ultra-fast CSS engine with theme variables |
-| **Build Tool** | **Vite 8** | Near-instant HMR and production bundle optimization |
-| **Routing** | **React Router 7** | Client-side routing with nested layouts and active indicators |
-| **Icons** | **Lucide React** | Clean, modern SVG icon set |
-| **Backend / Edge** | **Cloudflare Workers** | Sub-millisecond serverless execution and CORS handling |
-| **AI Intelligence** | **Google Gemini 2.5 Flash** | Ultra-fast multimodal reasoning engine |
-| **Auth & Database** | **Firebase Auth + Firestore** | Realtime cloud persistence and Google authentication |
+| **Frontend** | **React 19** | Latest React features, concurrent rendering, hooks |
+| **Language** | **TypeScript 5** | Strict type-safety across client and edge workers |
+| **Styling** | **Tailwind CSS v4** | Ultra-fast CSS engine with theme variables |
+| **Animations** | **Framer Motion** | Smooth micro-animations and screen transitions |
+| **PWA** | **vite-plugin-pwa & Workbox** | Offline caching, install manifest, service worker |
+| **Build Tool** | **Vite 8** | Unified bundle pipeline for client and Cloudflare worker |
+| **Edge Backend** | **Cloudflare Workers** | Sub-millisecond serverless execution at the edge |
+| **AI Engine** | **Google Gemini Models** | `gemini-3.5-flash-lite`, `3.6-flash`, and `3.7-flash` |
+| **Database & Auth** | **Firebase Firestore & Auth** | Google OAuth, persistent cloud history, feedback store |
 
 ---
 
@@ -162,33 +189,32 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 ```
 PromptWise/
 ├── public/
-│   ├── logo.png             # Official 3D Glassmorphic Brand Logo
-│   ├── favicon.png          # App Favicon
-│   └── ...                  # Static assets
+│   ├── Icon.png             # Official Transparent Brand Logo
+│   ├── favicon.png          # App Favicon (64x64)
+│   ├── pwa-192.png          # PWA Android/Desktop Icon (192x192)
+│   └── pwa-512.png          # PWA Android/Desktop Icon (512x512)
 ├── src/
-│   ├── assets/              # Icons and SVGs
 │   ├── components/
-│   │   ├── layout/          # Navbar, Footer, MobileNav, Layout wrapper
-│   │   └── ui/              # BrandLogo, ThemeToggle, Cards, Modals, Buttons
-│   ├── context/             # AuthContext, ThemeContext
-│   ├── data/                # Quiz questions, example prompts, masterclass guides
+│   │   ├── improve/         # PromptInput, QuestionCard, BeforeAfter, ScoreDisplay, FeedbackWidget
+│   │   ├── layout/          # Navbar, Footer, MobileNav, ScrollToTop
+│   │   └── ui/              # Button, Spinner, ThemeToggle
+│   ├── contexts/            # AuthContext, ThemeContext
 │   ├── lib/
 │   │   ├── api.ts           # Client API for Cloudflare Worker & Gemini
-│   │   ├── db.ts            # Firestore operations (prompts, history, likes)
-│   │   └── firebase.ts      # Firebase configuration & initialization
-│   ├── pages/               # Home, Improve, Learn, Examples, Practice, Quiz, etc.
-│   ├── App.tsx              # Application Routes and Providers
-│   ├── index.css            # Tailwind CSS v4 styling & dark theme tokens
-│   └── main.tsx             # React DOM root entry
+│   │   ├── auth.ts          # Google OAuth & Sign-in helpers
+│   │   ├── db.ts            # Firestore operations (prompts, feedback, history)
+│   │   ├── firebase.ts      # Firebase configuration & initialization
+│   │   └── validation.ts    # Conservative local garbage check (0 API calls)
+│   ├── pages/               # Home, Improve, Learn, Examples, Practice, Quiz, Admin, Dashboard
+│   ├── types/               # TypeScript models & API interfaces
+│   ├── App.tsx              # Application routing & layout tree
+│   └── main.tsx             # React root mount point
 ├── worker/
-│   ├── src/
-│   │   └── index.ts         # Cloudflare Worker code calling Gemini AI
-│   ├── package.json         # Worker dependencies
-│   └── wrangler.jsonc       # Cloudflare Worker configuration & secrets
-├── copy-logo.js             # Asset pipeline script for brand imagery
-├── package.json             # Root npm dependencies and scripts
-├── vite.config.ts           # Vite configuration
-└── README.md                # Comprehensive documentation
+│   └── index.ts             # Cloudflare Worker API (Analyze, Improve, Quiz)
+├── .dev.vars                # Local development environment secrets (Gemini API Key)
+├── wrangler.jsonc           # Cloudflare Worker deployment configuration
+├── vite.config.ts           # Unified Vite + Cloudflare + PWA build configuration
+└── package.json             # Root dependencies & build scripts
 ```
 
 ---
@@ -198,30 +224,24 @@ PromptWise/
 ### Prerequisites
 - **Node.js**: v18.0.0 or higher
 - **npm** or **pnpm**
-- A **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
-- A **Firebase Project** with Firestore and Authentication enabled
+- A **Google Gemini API Key** from [Google AI Studio](https://aistudio.google.com/)
+- A **Firebase Project** with Firestore and Google Authentication enabled
 
 ### 1. Clone & Install Dependencies
 ```bash
 git clone https://github.com/your-username/PromptWise.git
 cd PromptWise
 
-# Install frontend dependencies
+# Install all dependencies (root, worker, and PWA plugins)
 npm install
-
-# Install worker dependencies
-cd worker && npm install && cd ..
 ```
 
 ### 2. Configure Environment Variables
 
 #### Frontend Configuration (`.env.local`)
-Create a `.env.local` file in the root directory:
+Create `.env.local` in the project root:
 ```env
-# Cloudflare Worker API URL (local dev or deployed worker)
-VITE_API_URL=http://localhost:8787
-
-# Firebase Client Configuration
+# Firebase Configuration
 VITE_FIREBASE_API_KEY=your_firebase_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
@@ -230,62 +250,55 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-#### Cloudflare Worker Configuration (`worker/wrangler.jsonc`)
-In `worker/wrangler.jsonc` or via Cloudflare secrets:
-```bash
-npx wrangler secret put GEMINI_API_KEY
+#### Cloudflare Worker Secrets (`.dev.vars`)
+Create `.dev.vars` in the root directory for local worker development:
+```env
+GEMINI_API_KEY=your_google_gemini_api_key
 ```
 
-### 3. Sync Brand Assets
-Run the logo asset copy script to ensure the image logo and favicon are correctly distributed to `public/`:
-```bash
-node copy-logo.js
-```
-
-### 4. Run Development Servers
-
-In terminal 1 (Frontend):
+### 3. Run Development Server
 ```bash
 npm run dev
 ```
+Open `http://localhost:5173` in your browser.
 
-In terminal 2 (Worker API):
-```bash
-cd worker
-npx wrangler dev
-```
-
-Open your browser at `http://localhost:5173`.
-
----
-
-## 🌐 Deployment
-
-### 1. Deploy Cloudflare Worker (Backend)
-```bash
-cd worker
-npm run deploy
-```
-
-### 2. Deploy Frontend (Cloudflare Pages / Vercel / Netlify)
-Build the production bundle:
+### 4. Build for Production
 ```bash
 npm run build
 ```
-Upload the `dist/` directory to Cloudflare Pages or link your repository to Vercel/Netlify.
+This compiles:
+1. `dist/promptwise/index.js` — Cloudflare Worker API bundle.
+2. `dist/client/` — Client web application with PWA service worker and precached assets.
+
+---
+
+## 🌐 Deployment to Cloudflare
+
+PromptWise runs entirely on **Cloudflare Workers & Pages**:
+
+### Deploy with Wrangler:
+```bash
+# 1. Set production secret in Cloudflare
+npx wrangler secret put GEMINI_API_KEY
+
+# 2. Deploy worker and client assets
+npx wrangler deploy
+```
+
+Your app will be live at:
+`https://promptwise.<your-subdomain>.workers.dev/`
 
 ---
 
 ## 🔒 Security & Academic Ethics
 
-PromptWise is built with strict safety guidelines:
-- **No Private Data Storage**: Prompts are not stored without explicit user consent.
-- **Client-Side Firebase Rules**: Protected Firestore security rules ensuring students can only access their own saved data.
-- **Safe AI Grounding**: Guardrail instructions prevent the model from answering malicious, infringing, or harmful prompting requests.
+- **Zero-Storage by Default**: Prompts are only saved if a logged-in user chooses to store them in their personal dashboard.
+- **Client & Server Isolation**: API keys are securely held inside Cloudflare Worker environment secrets and never exposed to the client.
+- **Privacy First**: The admin panel exposes strictly user feedback and prompt context for model improvement, completely hiding personal user profiles and quiz metrics.
 
 ---
 
 ## 📄 License & Credits
 
-Developed with ❤️ for students, researchers, and AI enthusiasts.
+Developed with ❤️ by **Naseem Khan** for students, educators, and creators worldwide.  
 Released under the [MIT License](LICENSE).

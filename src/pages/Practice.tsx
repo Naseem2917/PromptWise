@@ -114,7 +114,7 @@ export function Practice() {
     if (!userPrompt.trim() || analyzing) return
     setAnalyzing(true)
     try {
-      const res = await analyzePrompt(userPrompt)
+      const res = await analyzePrompt(userPrompt, 'medium')
       setAnalysis(res)
       if (user) {
         savePracticeAttempt(user.uid, challenge.title, userPrompt, res.scoreBefore).catch(console.error)
@@ -161,10 +161,10 @@ export function Practice() {
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                 c.difficulty === 'Beginner'
-                  ? 'bg-emerald-500/20 text-emerald-300'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                   : c.difficulty === 'Intermediate'
-                  ? 'bg-amber-500/20 text-amber-300'
-                  : 'bg-rose-500/20 text-rose-300'
+                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                  : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
               }`}
             >
               {c.difficulty}
@@ -177,35 +177,35 @@ export function Practice() {
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Left: Scenario & Hints */}
         <div className="lg:col-span-5 space-y-5">
-          <div className="glass-card rounded-2xl p-6 border border-white/[0.08]">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">
                 Scenario Brief
               </span>
-              <span className="text-xs text-slate-500">{challenge.category}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{challenge.category}</span>
             </div>
-            <p className="text-slate-200 text-sm leading-relaxed mb-4">{challenge.scenario}</p>
+            <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed mb-4">{challenge.scenario}</p>
 
             {/* Original Bad Prompt */}
-            <div className="rounded-xl bg-red-500/[0.06] border border-red-500/20 p-3.5 mb-4">
-              <span className="text-xs font-semibold text-red-400 block mb-1">
+            <div className="rounded-xl bg-red-50 dark:bg-red-500/[0.06] border border-red-200 dark:border-red-500/20 p-3.5 mb-4">
+              <span className="text-xs font-semibold text-red-600 dark:text-red-400 block mb-1">
                 ❌ Starting Weak Prompt:
               </span>
-              <p className="font-mono text-xs text-slate-300">"{challenge.weakPrompt}"</p>
+              <p className="font-mono text-xs text-slate-800 dark:text-slate-300">"{challenge.weakPrompt}"</p>
             </div>
 
             {/* Hints Accordion */}
             <div>
               <button
                 onClick={() => setShowHints(!showHints)}
-                className="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1.5 cursor-pointer"
+                className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold flex items-center gap-1.5 cursor-pointer"
               >
                 <span>💡 {showHints ? 'Hide Hints' : 'Show Strategic Hints'}</span>
                 <span className="text-[10px]">{showHints ? '▲' : '▼'}</span>
               </button>
 
               {showHints && (
-                <ul className="mt-3 space-y-1.5 text-xs text-slate-400 pl-2 border-l border-amber-500/30">
+                <ul className="mt-3 space-y-1.5 text-xs text-slate-700 dark:text-slate-400 pl-2 border-l border-amber-500/30">
                   {challenge.hints.map((h, idx) => (
                     <li key={idx}>• {h}</li>
                   ))}
@@ -215,24 +215,24 @@ export function Practice() {
           </div>
 
           {/* Reveal Gold Standard Solution */}
-          <div className="glass-card rounded-2xl p-6 border border-white/[0.08]">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
             <button
               onClick={() => setShowSolution(!showSolution)}
-              className="w-full flex items-center justify-between text-sm font-bold text-slate-200 cursor-pointer"
+              className="w-full flex items-center justify-between text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
             >
               <span>🏆 View Expert Solution</span>
-              <span className="text-indigo-400 text-xs font-normal">
+              <span className="text-indigo-600 dark:text-indigo-400 text-xs font-normal">
                 {showSolution ? 'Hide' : 'Reveal'}
               </span>
             </button>
 
             {showSolution && (
-              <div className="mt-4 pt-4 border-t border-white/[0.06]">
-                <pre className="text-xs font-mono text-slate-300 bg-black/40 p-3.5 rounded-xl border border-white/[0.06] whitespace-pre-wrap leading-relaxed mb-3">
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-white/[0.06]">
+                <pre className="text-xs font-mono text-slate-800 dark:text-slate-300 bg-slate-50 dark:bg-black/40 p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.06] whitespace-pre-wrap leading-relaxed mb-3">
                   {challenge.expertPrompt}
                 </pre>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  <strong className="text-slate-300">Why this works:</strong> {challenge.explanation}
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <strong className="text-slate-900 dark:text-slate-300">Why this works:</strong> {challenge.explanation}
                 </p>
               </div>
             )}
@@ -241,12 +241,12 @@ export function Practice() {
 
         {/* Right: User Workspace & Live AI Scoring */}
         <div className="lg:col-span-7 space-y-5">
-          <div className="glass-card rounded-2xl p-6 border border-white/[0.08]">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
                 Your Improved Prompt
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 {userPrompt.length} chars
               </span>
             </div>
@@ -256,13 +256,13 @@ export function Practice() {
               onChange={(e) => setUserPrompt(e.target.value)}
               placeholder="Draft your high-impact prompt here using the 6 core elements (Goal, Context, Audience, Specificity, Output Format, Constraints)…"
               rows={9}
-              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.1] p-4 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500/50 resize-none font-mono leading-relaxed"
+              className="w-full rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.1] p-4 text-sm text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-indigo-500/50 resize-none font-mono leading-relaxed"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
               <button
                 onClick={() => setUserPrompt(challenge.weakPrompt)}
-                className="text-xs text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
+                className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-colors"
               >
                 Insert weak prompt to start
               </button>
@@ -286,7 +286,7 @@ export function Practice() {
                 {userPrompt.trim() && (
                   <Link
                     to={`/improve?prompt=${encodeURIComponent(userPrompt)}`}
-                    className="px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] text-xs font-semibold transition-colors"
+                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] text-xs font-semibold transition-colors"
                   >
                     Open in Full Tool →
                   </Link>
@@ -304,11 +304,11 @@ export function Practice() {
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-base font-bold text-slate-100">Live AI Evaluation</h3>
-                  <p className="text-xs text-slate-400">Analysis powered by PromptWise AI engine</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Live AI Evaluation</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Analysis powered by PromptWise AI engine</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-3xl font-black text-indigo-400">{analysis.scoreBefore}</span>
+                  <span className="text-3xl font-black text-indigo-600 dark:text-indigo-400">{analysis.scoreBefore}</span>
                   <span className="text-slate-500 text-xs">/100</span>
                 </div>
               </div>
@@ -320,8 +320,8 @@ export function Practice() {
                     key={key}
                     className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-medium flex items-center justify-between ${
                       ok
-                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                        : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'
                     }`}
                   >
                     <span className="capitalize">{key}</span>
@@ -331,8 +331,8 @@ export function Practice() {
               </div>
 
               {analysis.questions.length > 0 && (
-                <div className="text-xs text-slate-400 bg-white/[0.02] p-3 rounded-xl border border-white/[0.06]">
-                  <p className="text-amber-400 font-semibold mb-1">To reach 90+ score:</p>
+                <div className="text-xs text-slate-700 dark:text-slate-400 bg-slate-50 dark:bg-white/[0.02] p-3 rounded-xl border border-slate-200 dark:border-white/[0.06]">
+                  <p className="text-amber-600 dark:text-amber-400 font-semibold mb-1">To reach 90+ score:</p>
                   <p>Consider answering: "{analysis.questions[0].question}"</p>
                 </div>
               )}
