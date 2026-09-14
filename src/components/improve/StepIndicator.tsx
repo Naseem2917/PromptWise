@@ -16,7 +16,7 @@ export function StepIndicator({ currentStep, totalSteps, labels }: StepIndicator
           const active = i === currentStep
           return (
             <div key={i} className="flex-1 flex flex-col gap-1.5">
-              <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.08] overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
                   initial={{ width: 0 }}
@@ -28,7 +28,7 @@ export function StepIndicator({ currentStep, totalSteps, labels }: StepIndicator
                 <span
                   className={[
                     'text-[10px] font-medium transition-colors duration-200',
-                    done || active ? 'text-slate-400' : 'text-slate-700',
+                    done || active ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-400 dark:text-slate-500',
                   ].join(' ')}
                 >
                   {labels[i]}

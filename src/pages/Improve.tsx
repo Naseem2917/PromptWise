@@ -19,7 +19,7 @@ import { ScoreDisplay } from '../components/improve/ScoreDisplay'
 import { BeforeAfter } from '../components/improve/BeforeAfter'
 import { ExplanationPanel } from '../components/improve/ExplanationPanel'
 import { FeedbackWidget } from '../components/improve/FeedbackWidget'
-import { Spinner } from '../components/ui/Spinner'
+import { AnalyzeSkeleton, ImproveSkeleton } from '../components/improve/ImproveSkeletons'
 import { useAuth } from '../contexts/AuthContext'
 import { savePrompt, toggleSavePrompt } from '../lib/db'
 import { signInWithGoogle } from '../lib/auth'
@@ -28,25 +28,6 @@ const GENERIC_CLARIFICATION_QUESTION: Question = {
   id: 'clarification',
   question: 'What would you like me to help you create or figure out?',
   type: 'text',
-}
-
-// ── Loading overlay ───────────────────────────────────────────────────────────
-function LoadingState({ message }: { message: string }) {
-  return (
-    <motion.div
-      key="loading"
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      className="flex flex-col items-center gap-5 py-20"
-    >
-      <Spinner size="xl" />
-      <div className="text-center">
-        <p className="text-slate-800 dark:text-slate-200 font-semibold">{message}</p>
-        <p className="text-slate-500 dark:text-slate-500 text-sm mt-1">This usually takes a few seconds…</p>
-      </div>
-    </motion.div>
-  )
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -416,7 +397,7 @@ export function Improve() {
 
           {/* Analyzing */}
           {step === 'analyzing' && (
-            <LoadingState key="analyzing" message="Analyzing your prompt with AI…" />
+            <AnalyzeSkeleton prompt={originalPrompt} />
           )}
 
           {/* Step 2: Questions */}
@@ -453,7 +434,7 @@ export function Improve() {
 
           {/* Improving */}
           {step === 'improving' && (
-            <LoadingState key="improving" message="Generating your improved prompt…" />
+            <ImproveSkeleton originalPrompt={originalPrompt} />
           )}
 
           {/* Results */}

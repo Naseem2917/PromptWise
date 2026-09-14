@@ -23,9 +23,18 @@ export function QuestionCard({
   const [singleSelected, setSingleSelected] = useState<string>('')
   const [multiSelected, setMultiSelected] = useState<string[]>([])
   const [textValue, setTextValue] = useState('')
+  const [otherText, setOtherText] = useState('')
   const [toggled, setToggled] = useState(false)
 
   const isLast = questionNumber === totalQuestions
+
+  // Case-insensitive check to avoid duplicate "Other" if AI already generated it
+  const hasAiOther = Boolean(
+    question.options?.some((opt) => opt.trim().toLowerCase() === 'other'),
+  )
+
+  const isOtherSingle = singleSelected === '__other__'
+  const isOtherMulti = multiSelected.includes('__other__')
 
   const canProceed =
     question.type === 'text'
@@ -33,8 +42,12 @@ export function QuestionCard({
       : question.type === 'toggle'
         ? true
         : question.type === 'multi_choice'
-          ? multiSelected.length > 0
-          : singleSelected.length > 0
+          ? isOtherMulti
+            ? otherText.trim().length > 0
+            : multiSelected.length > 0
+          : isOtherSingle
+            ? otherText.trim().length > 0
+            : singleSelected.length > 0
 
   const handleSubmit = () => {
     if (question.type === 'text') {
@@ -42,9 +55,17 @@ export function QuestionCard({
     } else if (question.type === 'toggle') {
       onAnswer(question.id, toggled ? 'Yes' : 'No')
     } else if (question.type === 'multi_choice') {
-      onAnswer(question.id, multiSelected)
+      const selectedWithoutOtherMarker = multiSelected.filter((opt) => opt !== '__other__')
+      if (isOtherMulti && otherText.trim()) {
+        selectedWithoutOtherMarker.push(otherText.trim())
+      }
+      onAnswer(question.id, selectedWithoutOtherMarker)
     } else {
-      onAnswer(question.id, singleSelected)
+      if (isOtherSingle) {
+        onAnswer(question.id, otherText.trim())
+      } else {
+        onAnswer(question.id, singleSelected)
+      }
     }
   }
 
@@ -91,6 +112,46 @@ export function QuestionCard({
                 <span className="font-medium">{opt}</span>
               </button>
             ))}
+
+            {/* Custom "Other" option if not already provided by AI */}
+            {!hasAiOther && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setSingleSelected('__other__')}
+                  className={[
+                    optionBase,
+                    'flex items-center justify-between',
+                    isOtherSingle ? optionActive : optionIdle,
+                  ].join(' ')}
+                >
+                  <span className="font-medium flex items-center gap-2">
+                    <span>✏️</span>
+                    <span>Other (specify below)</span>
+                  </span>
+                  {isOtherSingle && <span className="text-xs font-semibold text-indigo-500">Selected</span>}
+                </button>
+
+                {isOtherSingle && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="pt-1"
+                  >
+                    <input
+                      type="text"
+                      value={otherText}
+                      onChange={(e) => setOtherText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
+                      placeholder="Type your custom answer…"
+                      autoFocus
+                      className="w-full bg-white dark:bg-white/[0.04] border border-indigo-500/40 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-indigo-500/20 shadow-xs"
+                    />
+                  </motion.div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -121,6 +182,54 @@ export function QuestionCard({
                 </button>
               )
             })}
+
+            {/* Custom "Other" checkbox if not already provided by AI */}
+            {!hasAiOther && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => toggleMulti('__other__')}
+                  className={[
+                    optionBase,
+                    'flex items-center gap-3',
+                    isOtherMulti ? optionActive : optionIdle,
+                  ].join(' ')}
+                >
+                  <span
+                    className={[
+                      'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-200',
+                      isOtherMulti ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600',
+                    ].join(' ')}
+                  >
+                    {isOtherMulti && <span className="text-white text-[10px] font-bold leading-none">✓</span>}
+                  </span>
+                  <span className="font-medium flex items-center gap-2">
+                    <span>✏️</span>
+                    <span>Other (specify below)</span>
+                  </span>
+                </button>
+
+                {isOtherMulti && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="pt-1"
+                  >
+                    <input
+                      type="text"
+                      value={otherText}
+                      onChange={(e) => setOtherText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
+                      placeholder="Type your custom answer…"
+                      autoFocus
+                      className="w-full bg-white dark:bg-white/[0.04] border border-indigo-500/40 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-indigo-500/20 shadow-xs"
+                    />
+                  </motion.div>
+                )}
+              </div>
+            )}
+
             {multiSelected.length > 0 && (
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{multiSelected.length} selected</p>
             )}
