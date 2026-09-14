@@ -179,21 +179,22 @@ graph TD
         A["User Submits Initial Input"] --> B{"Client Pre-Check: isObviousGarbage()"}
         
         B -->|Gibberish e.g. asdfgh, xxxxx| C["Clarification Modal (0 API Calls)"]
-        C --> D["User Enters Clear Intent"]
+        B -->|Pass / Valid Input| E["POST /api/analyze (Edge Worker)"]
         
-        D -->|Not Pass| A
-        D -->|Pass| E["POST /api/analyze (Edge Worker)"]
+        C --> D["User Enters Clear Intent"]
+        D -->|Not Pass| C
+        D -->|Pass| E
         
         E --> F["Gemini Flash Lite (Intent Check)"]
         F --> G{"Is Prompt Actionable?"}
         
-        G -->|Vague / Incomplete| A
+        G -->|Vague / Incomplete| C
     end
 
     subgraph StageB["Stage B: Context Enrichment"]
         G -->|Actionable| H["Generate 0 to 4 Adaptive Questions"]
         H --> I["Follow-Up Questions (Radio Pills / Checkbox / Free Text)"]
-        I --> J["User Answers / Skips [Validate Locally Only: isObviousGarbage()]"]
+        I --> J["User Answers / Skips (Validate Locally Only: isObviousGarbage)"]
     end
 
     subgraph StageC["Stage C: Multi-Model Synthesis & Scoring"]
