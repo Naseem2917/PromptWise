@@ -18,6 +18,7 @@
     <a href="#-the-problem--philosophy">Philosophy</a> •
     <a href="#-key-features">Key Features</a> •
     <a href="#-system-architecture">Architecture</a> •
+    <a href="#-ai-request-flow">AI Flow</a> •
     <a href="#-tech-stack">Tech Stack</a> •
     <a href="#-getting-started">Getting Started</a> •
     <a href="#-deployment">Deployment</a>
@@ -168,6 +169,76 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 
 ---
 
+## 🔄 AI Request Flow
+
+The diagram below illustrates the end-to-end lifecycle of a prompt request in PromptWise — featuring **lightweight local guards**, a **multi-model Gemini failover chain**, and **zero-token waste verification loops**:
+
+```mermaid
+graph TD
+    subgraph StageA["Stage A: Input Guard & Verification Loop"]
+        A["User Submits Initial Input"] --> B{"Client Pre-Check: isObviousGarbage()"}
+        
+        B -->|Gibberish e.g. asdfgh, xxxxx| C["Clarification Modal (0 API Calls)"]
+        C --> D["User Enters Clear Intent"]
+        
+        D -->|Not Pass| B
+        D -->|Pass| E["POST /api/analyze (Edge Worker)"]
+        
+        E --> F["Gemini Flash Lite (Intent Check)"]
+        F --> G{"Is Prompt Actionable?"}
+        
+        G -->|Vague / Incomplete| B
+    end
+
+    subgraph StageB["Stage B: Context Enrichment"]
+        G -->|Actionable| H["Generate 0 to 4 Adaptive Questions"]
+        H --> I["Follow-Up Questions (Radio Pills / Checkbox / Free Text)"]
+        I --> J["User Answers / Skips [Validate Locally Only: isObviousGarbage()]"]
+    end
+
+    subgraph StageC["Stage C: Multi-Model Synthesis & Scoring"]
+        J --> K["POST /api/improve (Edge Gateway)"]
+        K --> L["Gemini Failover Chain (3.5-Lite / 3.6 / 3.7)"]
+        L --> M["Enhanced Prompt + Multi-Metric Score Breakdown"]
+        M --> N{"User Logged In?"}
+        N -->|No| O["Display in Client Only (Zero Storage)"]
+    end
+
+    subgraph Storage["Database & History"]
+        G -.->|Verified Original Prompt Stored in History| P[("Firebase Firestore Saved History: Store Verified Original Prompt + Improved Prompt (Garbage is NEVER saved)")]
+        N -->|Yes| P
+    end
+```
+
+### Flow Breakdown by Stage (Simple Explanation)
+
+#### 🛡️ Stage A: Input Guard & Verification Loop (0-Token Waste)
+1. **Client Pre-Check (`isObviousGarbage`)**: When you enter a prompt, PromptWise first runs a quick local check in your browser (no API calls, instant response).
+   - If it detects keyboard smashes or gibberish (like `asdfgh` or `xxxxx`), it opens the **Clarification Modal** asking: *"What would you like me to help you create or figure out?"*
+   - When you type your clear intent:
+     - If it still doesn't pass, it loops back to check again.
+     - If it passes (or if your initial prompt was already valid), it moves straight to the Cloudflare Edge Worker (`POST /api/analyze`).
+2. **Actionability Check with Gemini Flash Lite**:
+   - Gemini checks if the prompt is actionable and clear.
+   - **Vague / Incomplete** (e.g., *"help me"* or *"fast"*): It asks for clarification and loops back so you can provide better details.
+   - **Actionable**: It adopts this as the official **Verified Original Prompt**. Notice the dotted line in the diagram: this verified prompt is immediately tagged to be stored in history (any initial garbage is discarded forever).
+
+#### 🎯 Stage B: Context Enrichment (Adaptive Questions)
+1. **0 to 4 Smart Questions**: Gemini automatically creates 0–4 targeted follow-up questions to understand your target audience, goals, style, and constraints.
+2. **Interactive Choices**: Rendered as easy clickable radio pills, checkboxes, or free text.
+3. **Local Check & Skip**: Answers are checked locally on your device. You can freely skip questions without triggering unnecessary Gemini calls or false errors.
+
+#### ✨ Stage C: Multi-Model Synthesis & Scoring
+1. **Edge Gateway Improvement (`POST /api/improve`)**: Sends your verified original prompt together with your answers to the Cloudflare Edge Worker.
+2. **Gemini Failover Chain**: Automatically chains `gemini-3.5-flash-lite` ⇄ `gemini-3.6-flash` ⇄ `gemini-3.7-flash` for high reliability and zero downtime.
+3. **Final Result & Scoring**: Generates your enhanced prompt, side-by-side Before/After comparison, score improvements (Clarity, Specificity, Context, Constraints), and a *"What Changed & Why"* explanation.
+
+#### 🔒 Database & History (Privacy by Design)
+- **User Logged In (Yes)**: The prompt is saved to **Firebase Firestore**. It saves the **Verified Original Prompt** and the **Improved Prompt**. Unverified keyboard smashes or initial garbage are **NEVER saved**.
+- **Guest / Not Logged In (No)**: Displayed only in your browser tab — zero persistent storage on the cloud for complete privacy.
+
+---
+
 ## 💻 Tech Stack
 
 | Layer | Technology | Description |
@@ -229,7 +300,7 @@ PromptWise/
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/your-username/PromptWise.git
+git clone https://github.com/Naseem2917/PromptWise.git
 cd PromptWise
 
 # Install all dependencies (root, worker, and PWA plugins)
@@ -300,5 +371,9 @@ Your app will be live at:
 
 ## 📄 License & Credits
 
-Developed with ❤️ by **Naseem Khan** for students, educators, and creators worldwide.  
-Released under the [MIT License](LICENSE).
+Developed with ❤️ by **Naseem Khan** for students, educators, and creators worldwide.
+
+This project is licensed under a **Non-Commercial with Mandatory Attribution License** — see the [LICENSE](LICENSE) file for complete terms:
+
+- ✅ **Personal & Educational Use**: Permitted freely provided explicit credit and repository links are preserved.
+- ❌ **Commercial Use & Selling**: Strictly prohibited. You cannot sell, redistribute for money, or use this project for any paid product/service without prior explicit written permission from Naseem Khan.
