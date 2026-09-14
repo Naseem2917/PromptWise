@@ -181,13 +181,13 @@ graph TD
         B -->|Gibberish e.g. asdfgh, xxxxx| C["Clarification Modal (0 API Calls)"]
         C --> D["User Enters Clear Intent"]
         
-        D -->|Not Pass| B
+        D -->|Not Pass| A
         D -->|Pass| E["POST /api/analyze (Edge Worker)"]
         
         E --> F["Gemini Flash Lite (Intent Check)"]
         F --> G{"Is Prompt Actionable?"}
         
-        G -->|Vague / Incomplete| B
+        G -->|Vague / Incomplete| A
     end
 
     subgraph StageB["Stage B: Context Enrichment"]
