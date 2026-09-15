@@ -2,10 +2,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { getUserPrompts, toggleSavePrompt, getPracticeCount, getLatestQuizScore } from '../lib/db'
+import { getUserPrompts, toggleSavePrompt, deletePrompt, getPracticeCount, getLatestQuizScore } from '../lib/db'
 import type { PromptRecord } from '../lib/db'
 import { Spinner } from '../components/ui/Spinner'
 import { UserAvatar } from '../components/ui/UserAvatar'
+import { ChatbotToolbar } from '../components/ui/ChatbotToolbar'
 import { cx } from '../lib/theme'
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
@@ -30,13 +31,16 @@ function PromptDetailModal({
   prompt,
   onClose,
   onToggleSave,
+  onDelete,
 }: {
   prompt: PromptRecord
   onClose: () => void
   onToggleSave: (id: string, saved: boolean) => void
+  onDelete: (id: string) => Promise<void>
 }) {
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const date = prompt.createdAt
     ? new Date((prompt.createdAt as { seconds: number }).seconds * 1000).toLocaleDateString('en-IN', {
@@ -135,6 +139,33 @@ function PromptDetailModal({
               {prompt.improvedPrompt}
             </pre>
           </div>
+
+          {/* Quick Chatbot Launch Toolbar */}
+          <ChatbotToolbar prompt={prompt.improvedPrompt} className="pt-2" />
+
+          {/* Modal Footer with Delete */}
+          <div className="pt-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+            <button
+              type="button"
+              onClick={async () => {
+                setDeleting(true)
+                await onDelete(prompt.id)
+                setDeleting(false)
+              }}
+              disabled={deleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <span>🗑️</span>
+              <span>{deleting ? 'Deleting...' : 'Delete Prompt'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -146,10 +177,12 @@ function PromptDetailModal({
 function PromptCard({
   prompt,
   onToggleSave,
+  onDelete,
   onClick,
 }: {
   prompt: PromptRecord
   onToggleSave: (id: string, saved: boolean) => void
+  onDelete: (id: string) => Promise<void>
   onClick: () => void
 }) {
   const [saving, setSaving] = useState(false)
@@ -181,14 +214,26 @@ function PromptCard({
               {prompt.scoreBefore} → {prompt.scoreAfter}
             </span>
           </div>
-          <button
-            onClick={handleToggle}
-            disabled={saving}
-            title={prompt.saved ? 'Remove bookmark' : 'Bookmark'}
-            className="text-lg cursor-pointer disabled:opacity-50 transition-transform duration-200 hover:scale-110 shrink-0"
-          >
-            {prompt.saved ? '🔖' : '📌'}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleToggle}
+              disabled={saving}
+              title={prompt.saved ? 'Remove bookmark' : 'Bookmark'}
+              className="text-base cursor-pointer disabled:opacity-50 transition-transform duration-200 hover:scale-110 shrink-0 p-1"
+            >
+              {prompt.saved ? '🔖' : '📌'}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(prompt.id)
+              }}
+              title="Delete prompt"
+              className="text-sm cursor-pointer text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors shrink-0 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+            >
+              🗑️
+            </button>
+          </div>
         </div>
         {/* Original prompt — 2 line clamp */}
         <p className="text-slate-800 dark:text-slate-200 text-sm font-medium line-clamp-2 break-words mb-2">
@@ -238,6 +283,20 @@ export function Dashboard() {
     // Also update modal if open
     setExpandedPrompt((prev) => prev?.id === id ? { ...prev, saved } : prev)
   }, [])
+
+  const handleDeletePrompt = useCallback(async (id: string) => {
+    if (!user) return
+    const confirmed = window.confirm('Are you sure you want to delete this prompt from your history?')
+    if (!confirmed) return
+    try {
+      await deletePrompt(id, user.uid)
+      setPrompts((prev) => prev.filter((p) => p.id !== id))
+      setExpandedPrompt((prev) => (prev?.id === id ? null : prev))
+    } catch (err) {
+      console.error('Failed to delete prompt:', err)
+      alert('Failed to delete prompt. Please try again.')
+    }
+  }, [user])
 
   if (!user) {
     return (
@@ -329,6 +388,7 @@ export function Dashboard() {
                       key={p.id}
                       prompt={p}
                       onToggleSave={handleToggleSave}
+                      onDelete={handleDeletePrompt}
                       onClick={() => setExpandedPrompt(p)}
                     />
                   ))}
@@ -354,6 +414,7 @@ export function Dashboard() {
                     key={p.id}
                     prompt={p}
                     onToggleSave={handleToggleSave}
+                    onDelete={handleDeletePrompt}
                     onClick={() => setExpandedPrompt(p)}
                   />
                 ))}
@@ -370,6 +431,7 @@ export function Dashboard() {
             prompt={expandedPrompt}
             onClose={() => setExpandedPrompt(null)}
             onToggleSave={handleToggleSave}
+            onDelete={handleDeletePrompt}
           />
         )}
       </AnimatePresence>

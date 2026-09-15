@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // USERS COLLECTION (/users/{userId})
+    // Used by: upsertUser() when a user signs in, and getAllUsers() in Admin panel.
+    // =========================================================================
+    match /users/{userId} {
+      // Allow user to read and write only their own profile
+      allow get: if request.auth != null
+                 && request.auth.uid == userId;
+
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId;
+
+      // Allow admin to list and inspect all registered users
+      allow list, get: if request.auth != null
+                       && request.auth.token.email == 'khannaseem1704@gmail.com';
+    }
+
+    // =========================================================================
+    // PROMPTS COLLECTION (/prompts/{promptId})
+    // Used by: savePrompt(), toggleSavePrompt(), getUserPrompts(), deletePrompt()
+    // in Dashboard, History, and Improve pages.
+    // =========================================================================
+    match /prompts/{promptId} {
+      // Allow authenticated user to create a prompt under their own UID
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Allow user to read only prompts they created
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      // Allow user to update their own prompt (e.g. toggle bookmark/saved status)
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+
+      // Allow user to delete only their own prompt from Dashboard / History
+      allow delete: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    // =========================================================================
+    // FEEDBACK COLLECTION (/feedback/{feedbackId})
+    // Used by: Feedback page, Prompt Quality widget, and Admin panel.
+    // =========================================================================
+    match /feedback/{feedbackId} {
+      // Allow logged-in users to submit feedback
+      allow create: if request.auth != null;
+
+      // Allow admin to read and list all submitted feedback
+      allow read: if request.auth != null
+                  && request.auth.token.email == 'khannaseem1704@gmail.com';
+
+      // Allow admin to delete feedback entries
+      allow delete: if request.auth != null
+                    && request.auth.token.email == 'khannaseem1704@gmail.com';
+
+      // Feedback cannot be modified once submitted
+      allow update: if false;
+    }
+
+    // =========================================================================
+    // PRACTICE COLLECTION (/practice/{docId})
+    // Used by: Practice Arena (savePracticeAttempt, getPracticeCount).
+    // =========================================================================
+    match /practice/{docId} {
+      // Allow user to record their practice attempt under their own UID
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Allow user to view their own attempts, and admin to view all
+      allow read: if request.auth != null
+                  && (resource.data.userId == request.auth.uid || request.auth.token.email == 'khannaseem1704@gmail.com');
+
+      allow update, delete: if false;
+    }
+
+    // =========================================================================
+    // QUIZ RESULTS COLLECTION (/quizResults/{docId})
+    // Used by: Quiz Module (saveQuizResult, getLatestQuizScore, getAllQuizResults).
+    // =========================================================================
+    match /quizResults/{docId} {
+      // Allow user to save quiz results under their own UID
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Allow user to view their own quiz results, and admin to view all
+      allow read: if request.auth != null
+                  && (resource.data.userId == request.auth.uid || request.auth.token.email == 'khannaseem1704@gmail.com');
+
+      allow update, delete: if false;
+    }
+
+  }
+}

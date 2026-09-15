@@ -95,9 +95,9 @@ export function ScoreDisplay({
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2 }}
-            className="text-emerald-600 dark:text-emerald-400 font-bold text-sm"
+            className="text-emerald-600 dark:text-emerald-400 font-bold text-xs sm:text-sm text-center px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20"
           >
-            +{gain} pts
+            {gain > 0 ? `+${gain} pts` : scoreAfter === 100 ? '★ Top Score' : '+0 pts (Optimal)'}
           </motion.span>
         </div>
 

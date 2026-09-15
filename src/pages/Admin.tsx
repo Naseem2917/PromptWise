@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { getAllFeedback } from '../lib/db'
+import { getAllFeedback, deleteFeedback } from '../lib/db'
 import type { AdminFeedbackRecord } from '../lib/db'
 import { Spinner } from '../components/ui/Spinner'
 import { Timestamp } from 'firebase/firestore'
@@ -97,6 +97,18 @@ export function Admin() {
       .catch((e) => setDataError((e as Error).message))
       .finally(() => setDataLoading(false))
   }, [isAdmin])
+
+  const handleDeleteFeedback = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to permanently delete this feedback?')
+    if (!confirmed) return
+    try {
+      await deleteFeedback(id)
+      setFeedback((prev) => prev.filter((f) => f.id !== id))
+    } catch (err) {
+      console.error('Failed to delete feedback:', err)
+      alert('Failed to delete feedback. Please try again.')
+    }
+  }
 
   // ── Auth loading ──────────────────────────────────────────────────────────
   if (authLoading) {
@@ -234,7 +246,17 @@ export function Admin() {
                     <RatingBadge rating={f.rating} />
                     <CategoryBadge category={f.category} />
                   </div>
-                  <span className="text-xs text-slate-400 shrink-0">{formatDate(f.createdAt)}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-slate-400">{formatDate(f.createdAt)}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFeedback(f.id)}
+                      className="text-sm text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+                      title="Delete feedback entry"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
 
                 {/* Feedback comment / message */}

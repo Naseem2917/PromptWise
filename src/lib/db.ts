@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
   getDoc,
+  deleteDoc,
   Timestamp,
 } from 'firebase/firestore'
 import type { User } from 'firebase/auth'
@@ -104,6 +105,18 @@ export async function getSavedPrompts(userId: string): Promise<PromptRecord[]> {
   return all.filter((p) => p.saved)
 }
 
+/** Delete a prompt from Firestore (enforces ownership when userId provided) */
+export async function deletePrompt(promptId: string, userId?: string): Promise<void> {
+  const ref = doc(db, 'prompts', promptId)
+  if (userId) {
+    const snap = await getDoc(ref)
+    if (snap.exists() && snap.data().userId !== userId) {
+      throw new Error('Unauthorized: You can only delete your own prompts.')
+    }
+  }
+  await deleteDoc(ref)
+}
+
 // ── Feedback ──────────────────────────────────────────────────────────────────
 
 /** Save user feedback to Firestore */
@@ -112,6 +125,11 @@ export async function saveFeedback(data: FeedbackRecord): Promise<void> {
     ...data,
     createdAt: serverTimestamp(),
   })
+}
+
+/** Delete feedback from Firestore (admin only) */
+export async function deleteFeedback(feedbackId: string): Promise<void> {
+  await deleteDoc(doc(db, 'feedback', feedbackId))
 }
 
 // ── Practice Tracking ─────────────────────────────────────────────────────────

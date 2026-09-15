@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { getUserPrompts, toggleSavePrompt } from '../lib/db'
+import { getUserPrompts, toggleSavePrompt, deletePrompt } from '../lib/db'
 import type { PromptRecord } from '../lib/db'
 import { Spinner } from '../components/ui/Spinner'
+import { ChatbotToolbar } from '../components/ui/ChatbotToolbar'
 
 export function History() {
   const { user } = useAuth()
@@ -23,6 +24,20 @@ export function History() {
   const handleToggleSave = async (id: string, saved: boolean) => {
     await toggleSavePrompt(id, !saved)
     setPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, saved: !saved } : p)))
+  }
+
+  const handleDeletePrompt = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    if (!user) return
+    const confirmed = window.confirm('Are you sure you want to delete this prompt from your history?')
+    if (!confirmed) return
+    try {
+      await deletePrompt(id, user.uid)
+      setPrompts((prev) => prev.filter((p) => p.id !== id))
+    } catch (err) {
+      console.error('Failed to delete prompt:', err)
+      alert('Failed to delete prompt. Please try again.')
+    }
   }
 
   const handleCopy = async (text: string, id: string) => {
@@ -105,10 +120,17 @@ export function History() {
                       </span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleToggleSave(prompt.id, prompt.saved) }}
-                        className="text-lg transition-transform duration-200 hover:scale-110 cursor-pointer"
+                        className="text-base transition-transform duration-200 hover:scale-110 cursor-pointer p-1"
                         title={prompt.saved ? 'Remove bookmark' : 'Bookmark'}
                       >
                         {prompt.saved ? '🔖' : '📌'}
+                      </button>
+                      <button
+                        onClick={(e) => handleDeletePrompt(prompt.id, e)}
+                        className="text-sm text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+                        title="Delete prompt"
+                      >
+                        🗑️
                       </button>
                       <svg
                         className={`w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
@@ -125,7 +147,7 @@ export function History() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="border-t border-slate-100 dark:border-white/[0.06] px-5 pb-5 pt-4 bg-slate-50/50 dark:bg-transparent"
+                      className="border-t border-slate-100 dark:border-white/[0.06] px-5 pb-5 pt-4 bg-slate-50/50 dark:bg-transparent space-y-4"
                     >
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="p-3 rounded-xl bg-red-50/60 dark:bg-red-500/[0.04] border border-red-200 dark:border-red-500/20">
@@ -146,6 +168,21 @@ export function History() {
                             {prompt.improvedPrompt}
                           </p>
                         </div>
+                      </div>
+
+                      {/* Chatbot Quick Launch & Action Toolbar */}
+                      <div className="pt-3 border-t border-slate-200/60 dark:border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <ChatbotToolbar prompt={prompt.improvedPrompt} compact />
+                        </div>
+                        <button
+                          onClick={(e) => handleDeletePrompt(prompt.id, e)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 transition-colors cursor-pointer shrink-0 self-end sm:self-center"
+                          title="Delete prompt from history"
+                        >
+                          <span>🗑️</span>
+                          <span>Delete Prompt</span>
+                        </button>
                       </div>
                     </motion.div>
                   )}

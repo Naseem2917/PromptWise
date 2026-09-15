@@ -252,7 +252,7 @@ Return ONLY valid JSON (no markdown, no explanation outside JSON):
 
 Rules:
 - improvedPrompt must be noticeably more detailed and effective than the original
-- scoreAfter is typically 75–95 for a well-improved prompt
+- scoreAfter must NEVER be lower than scoreBefore. If the original prompt is already optimal (e.g. scoreBefore is 95–100), preserve its score rather than artificially lowering it. If the original prompt has scoreBefore = 100, scoreAfter must be 100.
 - Provide 3–5 explanation items — each teaching the student WHY the change matters
 - Keep the explanation educational and encouraging in tone`
 
@@ -366,7 +366,12 @@ export default {
 					IMPROVE_SYSTEM_PROMPT,
 				)
 
-				const parsed = safeParseJSON(text)
+				const parsed = safeParseJSON(text) as Record<string, unknown>
+				if (parsed && typeof parsed.scoreAfter === 'number' && typeof scoreBefore === 'number') {
+					if (parsed.scoreAfter < scoreBefore) {
+						parsed.scoreAfter = Math.min(100, Math.max(scoreBefore, parsed.scoreAfter))
+					}
+				}
 				console.log(`[improve] mode=${normalisedMode} model=${modelUsed} latency=${latencyMs}ms`)
 
 				return Response.json({ success: true, data: parsed }, { headers: CORS_HEADERS })

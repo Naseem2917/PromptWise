@@ -50,9 +50,30 @@ export function Improve() {
   const [answers, setAnswers] = useState<QuestionAnswers>({})
   const [improveResult, setImproveResult] = useState<ImproveResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [errorKey, setErrorKey] = useState(0)
   const [savedPromptId, setSavedPromptId] = useState<string | null>(null)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (document.documentElement) {
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const triggerError = useCallback((msg: string | null) => {
+    setError(msg)
+    if (msg) {
+      setErrorKey((k) => k + 1)
+      scrollToTop()
+    }
+  }, [])
+
+  // Scroll to top immediately whenever screen/step, active question, or error changes
+  useEffect(() => {
+    scrollToTop()
+  }, [step, currentQuestionIdx, error, errorKey])
 
   // ── Generate improved prompt (Stage C: Final Improvement) ─────────────────
   const generateImproved = useCallback(
@@ -75,7 +96,9 @@ export function Improve() {
           selectedMode,
           collectedClarifications,
         )
-        setImproveResult(result)
+        const safeScoreAfter = Math.min(100, Math.max(scoreBefore, result.scoreAfter))
+        const normalizedResult = { ...result, scoreAfter: safeScoreAfter }
+        setImproveResult(normalizedResult)
         setStep('results')
 
         // If user is already signed in, auto-save prompt to Firestore
@@ -85,7 +108,7 @@ export function Improve() {
               originalPrompt: prompt,
               improvedPrompt: result.improvedPrompt,
               scoreBefore,
-              scoreAfter: result.scoreAfter,
+              scoreAfter: safeScoreAfter,
             })
             setSavedPromptId(id)
           } catch (e) {
@@ -93,11 +116,11 @@ export function Improve() {
           }
         }
       } catch (err: unknown) {
-        setError((err as Error).message)
+        triggerError((err as Error).message)
         setStep('input')
       }
     },
-    [user],
+    [user, triggerError],
   )
 
   // ── Handle prompt submit (Stage A: Initial Verification) ──────────────────
@@ -139,11 +162,11 @@ export function Improve() {
           await generateImproved(prompt, [], {}, result.scoreBefore, result.scoreBreakdown, selectedMode)
         }
       } catch (err: unknown) {
-        setError((err as Error).message)
+        triggerError((err as Error).message)
         setStep('input')
       }
     },
-    [generateImproved],
+    [generateImproved, triggerError],
   )
 
   // ── Handle clarification answer (Stage A: Verification Loop) ──────────────
@@ -153,15 +176,15 @@ export function Improve() {
 
       // 1. Lightweight local check on clarification answer
       if (isObviousGarbage(trimmed)) {
-        // 0 Gemini API calls! Stay in clarification loop
-        setError('Please describe what you would like to create or accomplish.')
+        // 0 Gemini API calls! Stay in clarification loop with gentle alert
+        triggerError('Please describe what you would like to create or accomplish.')
         return
       }
 
       setError(null)
 
-      // 2. Call Gemini Analyze with this candidate clarification prompt directly.
-      // The last prompt that Gemini verifies is the true "Original Prompt".
+      // 2. Update the prompt immediately so the skeleton displays the new prompt during analysis
+      setOriginalPrompt(trimmed)
       setStep('analyzing')
       try {
         const result = await analyzePrompt(trimmed, mode)
@@ -169,16 +192,14 @@ export function Improve() {
 
         if (result.status === 'needs_clarification') {
           // Still unclear -> stay in clarification loop
-          setError('Please provide more detail about what you want to create or figure out.')
+          triggerError('Please provide more detail about what you want to create or figure out.')
           setStep('clarification')
         } else if (result.needsQuestions && result.questions && result.questions.length > 0) {
-          // Verified! This clear prompt is now officially our Original Prompt!
-          setOriginalPrompt(trimmed)
+          // Verified! Clear previous clarifications and proceed to questions
           setClarifications([])
           setStep('questions')
         } else {
           // Verified and complete -> proceed directly to Stage C (improvement)
-          setOriginalPrompt(trimmed)
           setClarifications([])
           await generateImproved(
             trimmed,
@@ -190,11 +211,11 @@ export function Improve() {
           )
         }
       } catch (err: unknown) {
-        setError((err as Error).message)
+        triggerError((err as Error).message)
         setStep('clarification')
       }
     },
-    [mode, generateImproved],
+    [mode, generateImproved, triggerError],
   )
 
   // ── Handle verified follow-up question answer (Stage B) ───────────────────
@@ -204,7 +225,7 @@ export function Improve() {
       // Local check only for non-empty text answers (allow empty string for skip)
       if (typeof answer === 'string' && answer.trim().length > 0) {
         if (isObviousGarbage(answer)) {
-          setError('Please provide a meaningful answer to continue.')
+          triggerError('Please provide a meaningful answer to continue.')
           return
         }
       }
@@ -230,7 +251,7 @@ export function Improve() {
         )
       }
     },
-    [answers, analyzeResult, currentQuestionIdx, generateImproved, originalPrompt, clarifications, mode],
+    [answers, analyzeResult, currentQuestionIdx, generateImproved, originalPrompt, clarifications, mode, triggerError],
   )
 
   // ── Reset ────────────────────────────────────────────────────────────────
@@ -327,21 +348,31 @@ export function Improve() {
         <StepIndicator currentStep={activeStep} totalSteps={totalSteps} />
 
         {/* Error banner */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between"
-          >
-            <span>⚠️ {error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-400/60 hover:text-red-400 ml-2 text-xs"
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div
+              key={`error-${errorKey}`}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between"
             >
-              Dismiss
-            </button>
-          </motion.div>
-        )}
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base shrink-0">⚠️</span>
+                <span className="font-normal text-red-500 dark:text-red-400 truncate sm:whitespace-normal">
+                  {error}
+                </span>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400/60 hover:text-red-400 ml-2 text-xs font-medium cursor-pointer shrink-0"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Step content */}
         <AnimatePresence mode="wait">
