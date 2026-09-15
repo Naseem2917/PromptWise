@@ -27,7 +27,7 @@ export default function App() {
           <ScrollToTop />
           <div className="flex flex-col justify-between min-h-screen bg-[#F8FAFC] dark:bg-[#070B14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
             <Navbar />
-            <main className="flex-1 flex flex-col pt-16 sm:pt-20 pb-24 md:pb-12">
+            <main className="flex-1 flex flex-col pt-16 pb-24 md:pb-12">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/improve" element={<Improve />} />

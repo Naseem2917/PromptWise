@@ -172,7 +172,7 @@ Return status "needs_clarification" and ask ONLY this single question:
   "questions": [
     {
       "id": "clarification",
-      "question": "What would you like me to help you create or figure out?",
+      "question": "What specific goal would you like to achieve?",
       "type": "text"
     }
   ]
@@ -192,8 +192,8 @@ Score: each present element = approximately 16-17 points (max 100).
 Identify only what is GENUINELY MISSING and generate 0 to 4 adaptive, smart follow-up questions:
 - NEVER automatically ask fixed questions (audience, format, style) unless genuinely needed.
 - NEVER repeat information the student has already provided in the prompt or previous clarifications.
-- If the prompt is already detailed and complete, return "needsQuestions": false and an empty questions array.
 - Follow-up questions can be either "options" (mutually exclusive choices, provide 3-4 options) or "text" (open-ended short answer, omit options) depending on what is most helpful.
+- QUESTION ORDERING: Always place "options" questions FIRST, and place open-ended "text" questions LAST in the questions array so users answer quick choices first before typing.
 
 Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
 {
@@ -302,15 +302,30 @@ export default {
 					ANALYZE_SYSTEM_PROMPT,
 				)
 
-				const parsed = safeParseJSON(text)
+				const parsed = safeParseJSON(text) as any
+				if (parsed?.questions && Array.isArray(parsed.questions)) {
+					parsed.questions.sort((a: any, b: any) => {
+						if (a.type === 'text' && b.type !== 'text') return 1
+						if (a.type !== 'text' && b.type === 'text') return -1
+						return 0
+					})
+				}
 				console.log(`[analyze] model=${modelUsed} latency=${latencyMs}ms`)
 
 				return Response.json({ success: true, data: parsed }, { headers: CORS_HEADERS })
 			} catch (err: unknown) {
 				const msg = (err as Error).message ?? String(err)
 				console.error('Analyze error:', msg)
+
+				let friendlyMsg = 'Could not analyze your prompt. Please try again.'
+				if (msg.includes('503') || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('unavailable')) {
+					friendlyMsg = 'The AI service is currently experiencing very high demand. Please wait a few seconds and try again.'
+				} else if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate limit')) {
+					friendlyMsg = 'AI rate limit reached. Please wait a moment before trying again.'
+				}
+
 				return Response.json(
-					{ error: `Could not analyze your prompt. Please try again. (${msg})` },
+					{ error: friendlyMsg, rawError: msg },
 					{ status: 500, headers: CORS_HEADERS },
 				)
 			}
@@ -378,8 +393,16 @@ export default {
 			} catch (err: unknown) {
 				const msg = (err as Error).message ?? String(err)
 				console.error('Improve error:', msg)
+
+				let friendlyMsg = 'Could not improve your prompt. Please try again.'
+				if (msg.includes('503') || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('unavailable')) {
+					friendlyMsg = 'The AI service is currently experiencing very high demand. Please wait a few seconds and try again.'
+				} else if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate limit')) {
+					friendlyMsg = 'AI rate limit reached. Please wait a moment before trying again.'
+				}
+
 				return Response.json(
-					{ error: `Could not improve your prompt. Please try again. (${msg})` },
+					{ error: friendlyMsg, rawError: msg },
 					{ status: 500, headers: CORS_HEADERS },
 				)
 			}

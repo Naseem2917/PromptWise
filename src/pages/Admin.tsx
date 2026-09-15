@@ -85,6 +85,11 @@ export function Admin() {
   // Filter
   const [categoryFilter, setCategoryFilter] = useState('All')
 
+  // Multi-delete selection state
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isMultiDeleting, setIsMultiDeleting] = useState(false)
+
   const isAdmin = !authLoading && !!user && user.email === ADMIN_EMAIL
 
   // Load feedback once confirmed as admin
@@ -104,9 +109,60 @@ export function Admin() {
     try {
       await deleteFeedback(id)
       setFeedback((prev) => prev.filter((f) => f.id !== id))
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
     } catch (err) {
       console.error('Failed to delete feedback:', err)
       alert('Failed to delete feedback. Please try again.')
+    }
+  }
+
+  const toggleSelectFeedback = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = (visibleIds: string[]) => {
+    if (visibleIds.every((id) => selectedIds.has(id))) {
+      // Deselect all visible
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        visibleIds.forEach((id) => next.delete(id))
+        return next
+      })
+    } else {
+      // Select all visible
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        visibleIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return
+    const count = selectedIds.size
+    const confirmed = window.confirm(`Are you sure you want to permanently delete ${count} selected feedback ${count === 1 ? 'entry' : 'entries'}?`)
+    if (!confirmed) return
+
+    setIsMultiDeleting(true)
+    try {
+      await Promise.all(Array.from(selectedIds).map((id) => deleteFeedback(id)))
+      setFeedback((prev) => prev.filter((f) => !selectedIds.has(f.id)))
+      setSelectedIds(new Set())
+    } catch (err) {
+      console.error('Failed to delete selected feedbacks:', err)
+      alert('Failed to delete some feedbacks. Please try again.')
+    } finally {
+      setIsMultiDeleting(false)
     }
   }
 
@@ -196,7 +252,7 @@ export function Admin() {
         ))}
       </div>
 
-      {/* Category filter chips */}
+      {/* Category filter chips & Bulk Action Bar */}
       <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
         <div className="flex flex-wrap gap-2">
           {FEEDBACK_CATEGORIES.map((cat) => (
@@ -213,9 +269,55 @@ export function Admin() {
             </button>
           ))}
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Showing <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredFeedback.length}</span> responses
-        </p>
+
+        <div className="flex items-center gap-3">
+          {filteredFeedback.length > 0 && (
+            <button
+              onClick={() => {
+                if (selectMode) {
+                  setSelectMode(false)
+                  setSelectedIds(new Set())
+                } else {
+                  setSelectMode(true)
+                }
+              }}
+              className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+                selectMode
+                  ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-300 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
+                  : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              <span>{selectMode ? '✕ Cancel' : '☑️ Select'}</span>
+            </button>
+          )}
+
+          {selectMode && filteredFeedback.length > 0 && (
+            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={filteredFeedback.length > 0 && filteredFeedback.every((f) => selectedIds.has(f.id))}
+                onChange={() => toggleSelectAll(filteredFeedback.map((f) => f.id))}
+                className="w-3.5 h-3.5 rounded accent-indigo-600 cursor-pointer"
+              />
+              <span>Select All</span>
+            </label>
+          )}
+
+          {selectMode && selectedIds.size > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              disabled={isMultiDeleting}
+              className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <span>🗑️</span>
+              <span>{isMultiDeleting ? 'Deleting…' : `Delete Selected (${selectedIds.size})`}</span>
+            </button>
+          )}
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Showing <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredFeedback.length}</span> responses
+          </p>
+        </div>
       </div>
 
       {/* Data loading / error */}
@@ -239,25 +341,36 @@ export function Admin() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredFeedback.map((f) => (
-              <div key={f.id} className="glass-card rounded-2xl p-5 shadow-sm border border-slate-200/80 dark:border-white/[0.06]">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <RatingBadge rating={f.rating} />
-                    <CategoryBadge category={f.category} />
+            {filteredFeedback.map((f) => {
+              const isSelected = selectedIds.has(f.id)
+              return (
+                <div key={f.id} className={`glass-card rounded-2xl p-5 shadow-sm border transition-colors ${isSelected ? 'border-indigo-500/50 bg-indigo-500/[0.03]' : 'border-slate-200/80 dark:border-white/[0.06]'}`}>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectFeedback(f.id)}
+                          className="w-4 h-4 rounded accent-indigo-600 cursor-pointer"
+                          title="Select this feedback"
+                        />
+                      )}
+                      <RatingBadge rating={f.rating} />
+                      <CategoryBadge category={f.category} />
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs text-slate-400">{formatDate(f.createdAt)}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFeedback(f.id)}
+                        className="text-sm text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+                        title="Delete feedback entry"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-slate-400">{formatDate(f.createdAt)}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteFeedback(f.id)}
-                      className="text-sm text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
-                      title="Delete feedback entry"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
 
                 {/* Feedback comment / message */}
                 {f.message && (
@@ -314,7 +427,8 @@ export function Admin() {
                   </div>
                 )}
               </div>
-            ))}
+            )
+          })}
           </div>
         )
       )}

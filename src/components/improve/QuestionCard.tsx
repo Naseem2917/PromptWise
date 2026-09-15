@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Question } from '../../types'
 import { Button } from '../ui/Button'
@@ -8,8 +8,11 @@ interface QuestionCardProps {
   questionNumber: number
   totalQuestions: number
   onAnswer: (id: string, answer: string | string[]) => void
+  onBack?: () => void
   hideSkip?: boolean
   submitButtonText?: string
+  initialValue?: string
+  existingAnswer?: string | string[]
 }
 
 export function QuestionCard({
@@ -17,14 +20,70 @@ export function QuestionCard({
   questionNumber,
   totalQuestions,
   onAnswer,
+  onBack,
   hideSkip = false,
   submitButtonText,
+  initialValue,
+  existingAnswer,
 }: QuestionCardProps) {
   const [singleSelected, setSingleSelected] = useState<string>('')
   const [multiSelected, setMultiSelected] = useState<string[]>([])
-  const [textValue, setTextValue] = useState('')
+  const [textValue, setTextValue] = useState(initialValue ?? '')
   const [otherText, setOtherText] = useState('')
   const [toggled, setToggled] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Restore existing answer when navigating back/forth between questions
+  useEffect(() => {
+    if (existingAnswer !== undefined && existingAnswer !== '') {
+      if (question.type === 'text') {
+        setTextValue(typeof existingAnswer === 'string' ? existingAnswer : existingAnswer.join(' '))
+      } else if (question.type === 'toggle') {
+        setToggled(existingAnswer === 'Yes')
+      } else if (question.type === 'single_choice' && typeof existingAnswer === 'string') {
+        if (question.options?.includes(existingAnswer)) {
+          setSingleSelected(existingAnswer)
+          setOtherText('')
+        } else {
+          setSingleSelected('__other__')
+          setOtherText(existingAnswer)
+        }
+      } else if (question.type === 'multi_choice') {
+        const arr = Array.isArray(existingAnswer) ? existingAnswer : [existingAnswer]
+        const standardOptions = arr.filter((opt) => question.options?.includes(opt))
+        const customOther = arr.find((opt) => !question.options?.includes(opt))
+        if (customOther) {
+          setMultiSelected([...standardOptions, '__other__'])
+          setOtherText(customOther)
+        } else {
+          setMultiSelected(standardOptions)
+          setOtherText('')
+        }
+      }
+    } else {
+      setSingleSelected('')
+      setMultiSelected([])
+      setTextValue(initialValue ?? '')
+      setOtherText('')
+      setToggled(false)
+    }
+  }, [question.id, existingAnswer, question.type, initialValue])
+
+  // Auto-select text only on initial question open / cycle start
+  useEffect(() => {
+    if (question.type === 'text') {
+      if (initialValue !== undefined && existingAnswer === undefined) {
+        setTextValue(initialValue)
+      }
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus()
+          inputRef.current.select()
+        }
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [question.id, initialValue, question.type, existingAnswer])
 
   const isLast = questionNumber === totalQuestions
 
@@ -239,6 +298,7 @@ export function QuestionCard({
         {/* ── Text ────────────────────────────────────────────────────── */}
         {question.type === 'text' && (
           <input
+            ref={inputRef}
             type="text"
             value={textValue}
             onChange={(e) => setTextValue(e.target.value)}
@@ -273,10 +333,17 @@ export function QuestionCard({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-3 mt-8">
-          <Button onClick={handleSubmit} disabled={!canProceed}>
-            {submitButtonText ?? (isLast ? '✨ Generate Improved Prompt' : 'Next →')}
-          </Button>
+        <div className="flex items-center justify-between gap-3 mt-8">
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <Button variant="secondary" onClick={onBack}>
+                ← Back
+              </Button>
+            )}
+            <Button onClick={handleSubmit} disabled={!canProceed}>
+              {submitButtonText ?? (isLast ? '✨ Generate Improved Prompt' : 'Next →')}
+            </Button>
+          </div>
           {!hideSkip && (
             <Button variant="ghost" onClick={() => onAnswer(question.id, '')}>
               Skip

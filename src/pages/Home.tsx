@@ -65,7 +65,7 @@ export function Home() {
   return (
     <div className="flex-1 flex flex-col">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-28">
+      <section className="relative overflow-hidden pt-4 pb-16 sm:pt-6 sm:pb-24">
         {/* Background glow */}
         <div
           className="absolute inset-0 pointer-events-none"

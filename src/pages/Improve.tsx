@@ -10,7 +10,7 @@ import type {
 } from '../types'
 import { analyzePrompt, improvePrompt } from '../lib/api'
 import type { ResponseMode } from '../lib/api'
-import { isObviousGarbage } from '../lib/validation'
+import { isObviousGarbage, isObviousGarbageAnswer } from '../lib/validation'
 import { useSearchParams } from 'react-router-dom'
 import { PromptInput } from '../components/improve/PromptInput'
 import { StepIndicator } from '../components/improve/StepIndicator'
@@ -26,8 +26,30 @@ import { signInWithGoogle } from '../lib/auth'
 
 const GENERIC_CLARIFICATION_QUESTION: Question = {
   id: 'clarification',
-  question: 'What would you like me to help you create or figure out?',
+  question: 'What specific goal would you like to achieve?',
   type: 'text',
+}
+
+/** Put low-friction choice/toggle questions first, and open-ended text questions last */
+function sortFollowUpQuestions(questions?: Question[]): Question[] {
+  if (!questions || questions.length <= 1) return questions ?? []
+  return [...questions].sort((a, b) => {
+    if (a.type === 'text' && b.type !== 'text') return 1
+    if (a.type !== 'text' && b.type === 'text') return -1
+    return 0
+  })
+}
+
+// Helper to get saved mode for user
+function getSavedMode(userId?: string): ResponseMode {
+  if (!userId) return 'medium'
+  try {
+    const saved = localStorage.getItem(`promptwise_mode_${userId}`) as ResponseMode | null
+    if (saved && ['low', 'medium', 'high'].includes(saved)) return saved
+  } catch (e) {
+    console.error('Failed to read saved mode:', e)
+  }
+  return 'medium'
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -36,9 +58,28 @@ export function Improve() {
   const [searchParams] = useSearchParams()
   const initialPromptFromUrl = searchParams.get('prompt') ?? ''
   const [step, setStep] = useState<WorkflowStep>('input')
-  const [mode, setMode] = useState<ResponseMode>('medium')
+  const [mode, setMode] = useState<ResponseMode>(() => getSavedMode(user?.uid))
   const [originalPrompt, setOriginalPrompt] = useState(initialPromptFromUrl)
   const [clarifications, setClarifications] = useState<string[]>([])
+
+  // Keep mode in sync if user signs in or changes
+  useEffect(() => {
+    if (user?.uid) {
+      const userMode = getSavedMode(user.uid)
+      setMode(userMode)
+    }
+  }, [user?.uid])
+
+  const handleModeChange = useCallback((newMode: ResponseMode) => {
+    setMode(newMode)
+    if (user?.uid) {
+      try {
+        localStorage.setItem(`promptwise_mode_${user.uid}`, newMode)
+      } catch (e) {
+        console.error('Failed to persist mode:', e)
+      }
+    }
+  }, [user?.uid])
 
   useEffect(() => {
     if (initialPromptFromUrl) {
@@ -126,7 +167,7 @@ export function Improve() {
   // ── Handle prompt submit (Stage A: Initial Verification) ──────────────────
   const handlePromptSubmit = useCallback(
     async (prompt: string, selectedMode: ResponseMode) => {
-      setMode(selectedMode)               // store once — not asked again
+      handleModeChange(selectedMode)      // persist preference and store state
       setOriginalPrompt(prompt)
       setClarifications([])
       setAnswers({})
@@ -149,17 +190,21 @@ export function Improve() {
 
       try {
         const result = await analyzePrompt(prompt, selectedMode)
-        setAnalyzeResult(result)
+        const sortedResult = {
+          ...result,
+          questions: sortFollowUpQuestions(result.questions),
+        }
+        setAnalyzeResult(sortedResult)
 
-        if (result.status === 'needs_clarification') {
+        if (sortedResult.status === 'needs_clarification') {
           // Gemini decided prompt is vague/unclear
           setStep('clarification')
-        } else if (result.needsQuestions && result.questions && result.questions.length > 0) {
+        } else if (sortedResult.needsQuestions && sortedResult.questions && sortedResult.questions.length > 0) {
           // Verified -> Stage B (verified follow-up questions)
           setStep('questions')
         } else {
           // Verified and already comprehensive -> proceed directly to Stage C
-          await generateImproved(prompt, [], {}, result.scoreBefore, result.scoreBreakdown, selectedMode)
+          await generateImproved(prompt, [], {}, sortedResult.scoreBefore, sortedResult.scoreBreakdown, selectedMode)
         }
       } catch (err: unknown) {
         triggerError((err as Error).message)
@@ -181,6 +226,12 @@ export function Improve() {
         return
       }
 
+      // Prevent calling Gemini if user submitted without adding any details or modifying the prompt
+      if (trimmed.toLowerCase() === originalPrompt.trim().toLowerCase()) {
+        triggerError('Please add more details to your prompt to continue.')
+        return
+      }
+
       setError(null)
 
       // 2. Update the prompt immediately so the skeleton displays the new prompt during analysis
@@ -188,13 +239,17 @@ export function Improve() {
       setStep('analyzing')
       try {
         const result = await analyzePrompt(trimmed, mode)
-        setAnalyzeResult(result)
+        const sortedResult = {
+          ...result,
+          questions: sortFollowUpQuestions(result.questions),
+        }
+        setAnalyzeResult(sortedResult)
 
-        if (result.status === 'needs_clarification') {
+        if (sortedResult.status === 'needs_clarification') {
           // Still unclear -> stay in clarification loop
           triggerError('Please provide more detail about what you want to create or figure out.')
           setStep('clarification')
-        } else if (result.needsQuestions && result.questions && result.questions.length > 0) {
+        } else if (sortedResult.needsQuestions && sortedResult.questions && sortedResult.questions.length > 0) {
           // Verified! Clear previous clarifications and proceed to questions
           setClarifications([])
           setStep('questions')
@@ -205,8 +260,8 @@ export function Improve() {
             trimmed,
             [],
             {},
-            result.scoreBefore,
-            result.scoreBreakdown,
+            sortedResult.scoreBefore,
+            sortedResult.scoreBreakdown,
             mode,
           )
         }
@@ -215,7 +270,7 @@ export function Improve() {
         setStep('clarification')
       }
     },
-    [mode, generateImproved, triggerError],
+    [mode, generateImproved, triggerError, originalPrompt],
   )
 
   // ── Handle verified follow-up question answer (Stage B) ───────────────────
@@ -224,7 +279,7 @@ export function Improve() {
     async (id: string, answer: string | string[]) => {
       // Local check only for non-empty text answers (allow empty string for skip)
       if (typeof answer === 'string' && answer.trim().length > 0) {
-        if (isObviousGarbage(answer)) {
+        if (isObviousGarbageAnswer(answer)) {
           triggerError('Please provide a meaningful answer to continue.')
           return
         }
@@ -253,6 +308,14 @@ export function Improve() {
     },
     [answers, analyzeResult, currentQuestionIdx, generateImproved, originalPrompt, clarifications, mode, triggerError],
   )
+
+  // ── Navigate to previous question in Stage B ──────────────────────────────
+  const handlePreviousQuestion = useCallback(() => {
+    if (currentQuestionIdx > 0) {
+      setCurrentQuestionIdx((prev) => prev - 1)
+      scrollToTop()
+    }
+  }, [currentQuestionIdx])
 
   // ── Reset ────────────────────────────────────────────────────────────────
   const handleReset = () => {
@@ -394,7 +457,12 @@ export function Improve() {
                 </p>
               </div>
 
-              <PromptInput onSubmit={handlePromptSubmit} defaultValue={originalPrompt} defaultMode={mode} />
+              <PromptInput
+                onSubmit={handlePromptSubmit}
+                onModeChange={handleModeChange}
+                defaultValue={originalPrompt}
+                defaultMode={mode}
+              />
             </motion.div>
           )}
 
@@ -417,6 +485,7 @@ export function Improve() {
                 question={GENERIC_CLARIFICATION_QUESTION}
                 questionNumber={1}
                 totalQuestions={1}
+                initialValue={originalPrompt}
                 onAnswer={(_, ans) =>
                   handleClarificationAnswer(typeof ans === 'string' ? ans : ans.join(' '))
                 }
@@ -459,6 +528,8 @@ export function Improve() {
                 questionNumber={currentQuestionIdx + 1}
                 totalQuestions={questionCount}
                 onAnswer={handleFollowUpAnswer}
+                onBack={currentQuestionIdx > 0 ? handlePreviousQuestion : undefined}
+                existingAnswer={answers[analyzeResult.questions[currentQuestionIdx].id]}
               />
             </motion.div>
           )}

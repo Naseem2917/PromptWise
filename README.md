@@ -74,21 +74,19 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 
 ### 1. 🛠️ Socratic Prompt Improvement Engine (`/improve`)
 - **3-Stage Intelligent Architecture**:
-  - **Local Garbage Rejection (Stage A)**: Instant regex-based rejection for keyboard smashes (`asdfgh`, `xxxxx`, `qwertyuiop`, repetitive symbols) with **0 Gemini calls**. Short technical terms (`SQL`, `HTML`, `MERN`, `GPT`, `Python`) are safely preserved.
-  - **Adaptive Clarification Loop**: If prompt intent is unclear, guides the user with a single friendly question: *"What would you like me to help you create or figure out?"* The verified clear prompt replaces vague input and becomes the official prompt.
-  - **Adaptive Follow-Up Questions (Stage B)**: Dynamic choice pills or open text to extract missing context. Users can easily **Skip** optional questions.
+  - **Smart Local Validation (Stage A)**: Instant client-side checks for single-word keywords (e.g. `"python"`, `"resume"`), keyboard smashes (`asdfgh`, `xxxxx`), repeated character spam, and unedited submissions with **0 Gemini calls** and zero token waste.
+  - **Adaptive Clarification with Pre-Selected Input**: If prompt intent is unclear, guides the user with: *"What specific goal would you like to achieve?"* The user's input is kept in the text box and automatically highlighted (`Ctrl + A` state) so they can overwrite with a single keypress or use arrow keys to edit in-place.
+  - **Two-Way Follow-Up Navigation (Stage B)**: Dynamic choice pills or open text to extract missing context. Features a **`← Back` Button** allowing users to return to previous questions with their selected options or custom answers preserved and pre-filled. Single-word answers (e.g. `"TYBSCIT"`, `"Python"`, `"Beginner"`) are cleanly accepted.
+  - **Smart Follow-Up Sequencing (Options First, Text Last)**: Option-based questions (`single_choice`, `multi_choice`, `toggle`) are systematically ordered first, placing open-ended `text` questions at the very end to minimize typing fatigue and maximize user momentum.
   - **Final Synthesis (Stage C)**: Generates a high-impact prompt with role/persona, context, specific tasks, formatting, and constraints.
-- **Response Modes**:
-  - ⚡ **Low / Fast** (`gemini-3.5-flash-lite`): Instant turnaround for quick queries.
-  - ⚖️ **Medium / Balanced** (`gemini-3.6-flash`): Ideal blend of speed and depth (Default).
-  - 🧠 **High / Deep** (`gemini-3.7-flash`): Maximum depth for advanced research, complex code, and thesis generation.
-- **Diagnostic Scorecard (0–100)**: Evaluates prompts across 6 core dimensions:
-  - 🎯 **Goal**: Clear objective defined.
-  - 🌐 **Context**: Relevant background included.
-  - 👥 **Audience**: Target reader/consumer specified.
-  - 🔍 **Specificity**: Technical/subject details provided.
-  - 📋 **Output Format**: Layout and structure outlined.
-  - 📐 **Constraints**: Negative rules and boundaries set.
+- **Persistent Model Preference**: Remembers the logged-in user's last selected Response Mode (Low ⚡ / Medium ⚖️ / High 🧠) across sessions and page reloads via user-scoped local persistence.
+- **Direct Chatbot Quick Launch Toolbar**:
+  - Direct 1-click launch buttons for **ChatGPT**, **Google Gemini**, and **Claude** using official SVG brand logos.
+  - Available across **Improve Results**, **Dashboard**, and **Prompt History**.
+  - **Claude Auto-Prefill + Clipboard Fallback**: Auto-prefills prompts into Claude via `?q=` with a background clipboard copy fallback for instant Ctrl+V pasting.
+- **Accurate Scoring & Monotonic Improvement**:
+  - Diagnostic scorecard (0–100) evaluating Goal, Context, Audience, Specificity, Format, and Constraints.
+  - Guaranteed monotonic scoring: improved prompts never drop in score relative to the initial prompt.
 - **Before & After Visualizer**: Side-by-side comparison with one-click copy and auto-saving.
 - **"What Changed & Why" Breakdown**: Teaches students why each addition was made.
 
@@ -98,12 +96,7 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 - **Prompting Frameworks**: Zero-shot, Few-shot, Chain-of-Thought (CoT), and Role-Prompting explained simply.
 
 ### 3. 💡 Curated Examples Library (`/examples`)
-- Categorized real-world prompt templates for:
-  - 💻 Software Development & Code Debugging
-  - 📝 Academic Research & Thesis Writing
-  - 🧮 Mathematics & Data Science
-  - 🎓 Exam Revision & Active Recall
-  - 💼 Resume & Career Preparation
+- Categorized real-world prompt templates for Software Development, Academic Research, Math & Data Science, Exam Prep, and Career Planning.
 - **1-Click Testing**: Load any example directly into the improvement engine with a single tap.
 
 ### 4. 🎯 Practice Arena (`/practice`)
@@ -116,20 +109,26 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 - **`🔄 New Quiz` Feature**: Fetch fresh AI-generated questions from the server.
 - Rank and proficiency scoring from *Prompt Explorer* to *Prompt Grandmaster*.
 
-### 6. 🛡️ Responsible AI Hub (`/responsible-ai`)
+### 6. 📊 Dashboard & History Management (`/dashboard`, `/history`)
+- **Complete Prompt History**: View, search, and filter previously improved prompts.
+- **Direct AI Chatbot Launch**: Launch any saved prompt into ChatGPT, Gemini, or Claude directly from the dashboard card.
+- **User Ownership & Prompt Deletion**: Permanently delete any prompt from your history with Firestore client & security rules ownership enforcement.
+
+### 7. 🛡️ Responsible AI Hub (`/responsible-ai`)
 - Academic integrity, plagiarism avoidance, citing AI contributions.
 - Privacy protection (never sharing passwords, API keys, or personal identifiable information).
 - Detecting hallucinations and verifying critical facts.
 
-### 7. 📱 Progressive Web App (PWA) & Mobile Excellence
+### 8. 📱 Progressive Web App (PWA) & Mobile Excellence
 - Offline caching with Workbox Service Worker.
 - Installable on mobile and desktop devices with dedicated high-res icons.
-- Mobile-first bottom navigation bar and gesture-friendly cards.
+- Mobile-first bottom navigation bar, tight vertical spacing, and responsive branding.
 
-### 8. 🔐 Admin Feedback Center (`/admin`)
+### 9. 🔐 Admin Feedback Center (`/admin`)
 - **Strict Privacy**: No personal user data or quiz history exposed; strictly feedback-focused.
 - **Full Prompt Context**: Displays the exact **User Prompt** and **Improved Output Shown** alongside user comments.
 - **Smart Rating Badges**: `👍 Helpful (Yes)` and `👎 Needs Improvement (No)` badges, 1-5 star ratings, and one-click copy buttons.
+- **On-Demand Batch Selection**: Clean, uncluttered UI by default without pre-showing checkboxes. Clicking **"☑️ Select"** toggles selection mode where individual checkboxes, "Select All", and batch delete appear on-demand.
 
 ---
 
