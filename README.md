@@ -99,39 +99,35 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 - **The 6 Core Building Blocks**: Role, Objective, Context, Step-by-Step Instructions, Constraints, and Output Format.
 - **Interactive Anti-Pattern Guide**: Real examples of "vague prompts", "conflicting instructions", and "overloaded contexts" with interactive before/after fixes.
 - **Prompting Frameworks**: Zero-shot, Few-shot, Chain-of-Thought (CoT), and Role-Prompting explained simply.
+- **🛡️ Integrated Responsible AI & Academic Ethics**:
+  - Direct guidance on **Data Privacy & PII protection** (scrubbing keys, credentials, and customer data).
+  - **Hallucination Defense**: Structuring escape hatches and verifying critical facts against ground truth.
+  - **Academic Integrity**: Adhering to university honor codes, citing AI assistance transparently, and verifying code.
+  - **Interactive Pre-Flight Checklist**: 5-point verification checklist ensuring prompts follow safety and ethics best practices.
 
 ### 3. 💡 Curated Examples Library (`/examples`)
 - Categorized real-world prompt templates for Software Development, Academic Research, Math & Data Science, Exam Prep, and Career Planning.
 - **1-Click Testing**: Load any example directly into the improvement engine with a single tap.
 
-### 4. 🎯 Practice Arena (`/practice`)
-- Hands-on sandbox exercises with realistic scenarios (e.g. debugging slow SQL queries, cold email rewrites, junior developer bug reports).
-- Hint system and expert solutions to verify understanding.
-
-### 5. 🧠 Skills & Knowledge Quiz (`/quiz`)
+### 4. 🧠 Skills & Knowledge Quiz (`/quiz`)
 - 6-question interactive quiz testing prompt engineering principles, token economics, and LLM behavior.
 - **Session Progress Preservation**: Leaving the quiz page to explore other sections (e.g. `/learn`, `/examples`) preserves your active question, selected answers, and current score without re-triggering AI generation.
 - **`🔁 Retake Quiz` Feature**: Reset and re-attempt the exact same quiz questions to master weak spots.
 - **`🔄 New Quiz` Feature**: On-demand button in the header and results screen to fetch a fresh set of AI-generated questions when ready.
 - Rank and proficiency scoring from *Prompt Explorer* to *Prompt Grandmaster*.
 
-### 6. 📊 Dashboard & History Management (`/dashboard`, `/history`)
+### 5. 📊 Dashboard & History Management (`/dashboard`, `/history`)
 - **Complete Prompt History**: View, search, and filter previously improved prompts.
 - **Direct AI Chatbot Launch**: Launch any saved prompt into ChatGPT, Gemini, or Claude directly from the dashboard card.
 - **User Ownership & Prompt Deletion**: Permanently delete any prompt from your history with Firestore client & security rules ownership enforcement.
 
-### 7. 🛡️ Responsible AI Hub (`/responsible-ai`)
-- Academic integrity, plagiarism avoidance, citing AI contributions.
-- Privacy protection (never sharing passwords, API keys, or personal identifiable information).
-- Detecting hallucinations and verifying critical facts.
-
-### 8. 📱 Progressive Web App (PWA) & Mobile Excellence
+### 6. 📱 Progressive Web App (PWA) & Mobile Excellence
 - **Dark & Light Mode**: Clean, persistent theme switching saved locally in browser preferences.
 - Offline caching with Workbox Service Worker.
 - Installable on mobile and desktop devices with dedicated high-res icons.
 - Mobile-first bottom navigation bar, tight vertical spacing, and responsive branding.
 
-### 9. 🔐 Admin Feedback Center (`/admin`)
+### 7. 🔐 Admin Feedback Center (`/admin`)
 - **Strict Privacy**: No personal user data or quiz history exposed; strictly feedback-focused.
 - **Full Prompt Context**: Displays the exact **User Prompt** and **Improved Output Shown** alongside user comments.
 - **Smart Rating Badges**: `👍 Helpful (Yes)` and `👎 Needs Improvement (No)` badges, 1-5 star ratings, and one-click copy buttons.

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 
@@ -208,9 +208,103 @@ Present findings in CVSS severity order with concrete remediations.`,
   },
 ]
 
+interface ResponsiblePrinciple {
+  title: string
+  icon: string
+  subtitle: string
+  description: string
+  dos: string[]
+  donts: string[]
+}
+
+const RESPONSIBLE_PRINCIPLES: ResponsiblePrinciple[] = [
+  {
+    title: 'Data Privacy & PII Protection',
+    icon: '🔒',
+    subtitle: 'Keep secrets, credentials, and personal records out of the prompt payload.',
+    description: 'Cloud LLMs process prompts across remote inference infrastructure. Assume sensitive inputs can be logged or accessed in error dumps unless on enterprise zero-retention tiers.',
+    dos: [
+      'Anonymize user records with pseudonyms (e.g., "User_A", "Client_Corp").',
+      'Scrub private keys, JWTs, API secrets, and passwords before submitting.',
+      'Use synthetic dummy datasets when debugging database schemas.',
+    ],
+    donts: [
+      'Never paste real customer credit cards, phone numbers, or health records.',
+      'Do not feed internal unreleased company financials without compliance signoff.',
+    ],
+  },
+  {
+    title: 'Hallucination Defense & Fact Verification',
+    icon: '🎯',
+    subtitle: 'LLMs predict believable tokens, not ground truth. Always verify.',
+    description: 'Generative models sound most confident right when they are completely wrong. Ground your prompts strictly in provided context and demand explicit source attribution.',
+    dos: [
+      'Instruct the AI: "If the provided text does not contain the answer, explicitly state \'I do not know\'".',
+      'Cross-check legal citations, medical advice, and statistical claims against original sources.',
+      'Ask the AI to cite exact lines or quotes from reference material.',
+    ],
+    donts: [
+      'Never deploy AI code or financial calculations to production without human review.',
+      'Avoid open-ended prompts like "Make up realistic scientific references".',
+    ],
+  },
+  {
+    title: 'Academic Integrity & Citing AI',
+    icon: '🎓',
+    subtitle: 'Be honest about tool usage and maintain genuine intellectual ownership.',
+    description: 'Generative AI is a tutor and brainstorming partner, not a ghostwriter. Disclose AI assistance and adhere to university honor codes and research ethics.',
+    dos: [
+      'Use AI to clarify complex syllabus concepts and generate practice questions.',
+      'Cite AI assistance in project documentation (e.g. "PromptWise assisted in drafting test cases").',
+      'Understand every single line of code or analysis before submitting to professors.',
+    ],
+    donts: [
+      'Do not submit raw AI-generated essays or code without understanding the underlying mechanics.',
+      'Never claim AI-generated thesis arguments as original primary research without verification.',
+    ],
+  },
+  {
+    title: 'Prompt Injection Defense & Security',
+    icon: '🛡️',
+    subtitle: 'Protect downstream apps from direct and indirect adversarial injection.',
+    description: 'Untrusted user input embedded into prompts can contain instructions that override system rules. Proactively sanitize inputs and delimit instructions.',
+    dos: [
+      'Wrap untrusted inputs in XML/Markdown delimiters (e.g. <user_query>...</user_query>).',
+      'Enforce strict system instructions that cannot be overridden by user content.',
+      'Validate and sanitize outputs before sending them to SQL queries or system commands.',
+    ],
+    donts: [
+      'Never concatenate raw user queries directly into system prompts without delimiters.',
+      'Do not give LLMs unconstrained write permissions to databases or shell scripts.',
+    ],
+  },
+]
+
+const ETHICS_CHECKLIST = [
+  'Does my prompt exclude sensitive passwords, API keys, and personal customer data?',
+  'Have I provided an escape hatch ("If information is missing, state \'Not found\'") to prevent hallucinations?',
+  'Are external user inputs wrapped in clear delimiters to prevent prompt injection?',
+  'Is the tone respectful, unbiased, and free from harmful stereotypes?',
+  'Will a human reviewer verify critical facts, code, and math calculations before publishing?',
+]
+
 export function Learn() {
-  const [activeTab, setActiveTab] = useState<'fundamentals' | 'core' | 'mistakes' | 'advanced'>('fundamentals')
+  const [activeTab, setActiveTab] = useState<'fundamentals' | 'core' | 'mistakes' | 'advanced' | 'ethics'>('fundamentals')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
+
+  // Automatically switch to ethics tab if navigated via /learn#responsible-ai
+  useEffect(() => {
+    if (window.location.hash === '#responsible-ai' || window.location.hash === '#ethics') {
+      setActiveTab('ethics')
+    }
+  }, [])
+
+  const toggleCheck = (idx: number) => {
+    setCheckedItems((prev) => ({ ...prev, [idx]: !prev[idx] }))
+  }
+
+  const allChecked = ETHICS_CHECKLIST.every((_, i) => checkedItems[i])
 
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text)
@@ -219,7 +313,7 @@ export function Learn() {
   }
 
   return (
-    <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+    <div id="responsible-ai" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
       {/* Hero Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -233,7 +327,7 @@ export function Learn() {
           Master the Art of Prompting
         </h1>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
-          Understand how Generative AI processes instructions. Learn the anatomy of effective prompts and eliminate common mistakes.
+          Understand how Generative AI processes instructions. Learn the anatomy of effective prompts, eliminate mistakes, and practice responsible AI.
         </p>
 
         {/* Tab switchers */}
@@ -246,7 +340,7 @@ export function Learn() {
                 : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-white/[0.08] shadow-xs'
             }`}
           >
-            🎓 Fundamentals & Anatomy
+            🎓 Fundamentals
           </button>
           <button
             onClick={() => setActiveTab('core')}
@@ -277,6 +371,16 @@ export function Learn() {
             }`}
           >
             ⚡ Advanced Patterns
+          </button>
+          <button
+            onClick={() => setActiveTab('ethics')}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
+              activeTab === 'ethics'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                : 'bg-white dark:bg-white/[0.04] text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 border border-emerald-500/20 shadow-xs'
+            }`}
+          >
+            🛡️ Responsible AI &amp; Ethics
           </button>
         </div>
       </motion.div>
@@ -482,6 +586,136 @@ export function Learn() {
                 </div>
               </div>
             ))}
+          </motion.div>
+        )}
+
+        {/* Responsible AI & Ethics Tab */}
+        {activeTab === 'ethics' && (
+          <motion.div
+            key="ethics"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -14 }}
+            className="space-y-8"
+          >
+            {/* Intro Alert */}
+            <div className="rounded-2xl p-5 border border-emerald-500/20 bg-emerald-500/[0.04] flex flex-col sm:flex-row items-start gap-4">
+              <span className="text-3xl shrink-0">🌱</span>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  Responsible Prompt Engineering &amp; Academic Ethics
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Generative AI is a force multiplier for learning when used with integrity. Great prompt engineers protect personal data, verify facts before relying on them, and adhere strictly to university and professional codes of conduct.
+                </p>
+              </div>
+            </div>
+
+            {/* Principles Cards */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {RESPONSIBLE_PRINCIPLES.map((principle, i) => (
+                <div
+                  key={i}
+                  className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08] flex flex-col justify-between shadow-xs"
+                >
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-3xl">{principle.icon}</span>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+                          {principle.title}
+                        </h3>
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                          {principle.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm my-3 leading-relaxed">
+                      {principle.description}
+                    </p>
+
+                    <div className="space-y-3 mt-4">
+                      <div className="bg-emerald-500/[0.05] border border-emerald-500/20 rounded-xl p-3">
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mb-1.5">
+                          ✅ Best Practices (Do This):
+                        </span>
+                        <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                          {principle.dos.map((d, idx) => (
+                            <li key={idx}>• {d}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-red-500/[0.05] border border-red-500/20 rounded-xl p-3">
+                        <span className="text-xs font-bold text-red-600 dark:text-red-400 block mb-1.5">
+                          ❌ Pitfalls to Avoid (Don't Do):
+                        </span>
+                        <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
+                          {principle.donts.map((d, idx) => (
+                            <li key={idx}>• {d}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Interactive Ethics Pre-Flight Checklist */}
+            <div className="glass-card rounded-2xl p-6 sm:p-8 border border-emerald-500/30 bg-emerald-500/[0.02]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <span>📋 Pre-Flight Responsibility Checklist</span>
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    Verify each safety and integrity checkpoint before deploying or sharing prompts.
+                  </p>
+                </div>
+                <div className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 self-start sm:self-auto">
+                  {Object.values(checkedItems).filter(Boolean).length} / {ETHICS_CHECKLIST.length} Checked
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                {ETHICS_CHECKLIST.map((item, idx) => {
+                  const isChecked = Boolean(checkedItems[idx])
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleCheck(idx)}
+                      className={`w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
+                        isChecked
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+                          : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.12]'
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-md flex items-center justify-center border text-xs font-bold shrink-0 transition-colors ${
+                          isChecked
+                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                            : 'border-slate-300 dark:border-white/20 text-transparent'
+                        }`}
+                      >
+                        ✓
+                      </span>
+                      <span>{item}</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {allChecked && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-5 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold text-center"
+                >
+                  🎉 All integrity checks passed! Your prompt follows responsible AI guidelines.
+                </motion.div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

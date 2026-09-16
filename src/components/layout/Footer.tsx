@@ -46,13 +46,13 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/practice" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    Practice Arena
+                  <Link to="/examples" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    Prompt Library
                   </Link>
                 </li>
                 <li>
-                  <Link to="/examples" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    Prompt Library
+                  <Link to="/quiz" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                    Skills Quiz
                   </Link>
                 </li>
               </ul>
@@ -70,12 +70,7 @@ export function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/quiz" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                    Skills Quiz
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/responsible-ai" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                  <Link to="/learn#responsible-ai" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                     Responsible AI
                   </Link>
                 </li>
