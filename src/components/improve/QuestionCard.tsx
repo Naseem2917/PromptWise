@@ -336,12 +336,50 @@ export function QuestionCard({
         <div className="flex items-center justify-between gap-3 mt-8">
           <div className="flex items-center gap-3">
             {onBack && (
-              <Button variant="secondary" onClick={onBack}>
-                ← Back
+              <Button
+                variant="secondary"
+                onClick={onBack}
+                className="group inline-flex items-center gap-2 font-medium"
+              >
+                <svg
+                  className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                <span>Back</span>
               </Button>
             )}
-            <Button onClick={handleSubmit} disabled={!canProceed}>
-              {submitButtonText ?? (isLast ? '✨ Generate Improved Prompt' : 'Next →')}
+            <Button
+              onClick={handleSubmit}
+              disabled={!canProceed}
+              className="group inline-flex items-center gap-2"
+            >
+              {submitButtonText ? (
+                <span>{submitButtonText}</span>
+              ) : isLast ? (
+                <span>✨ Generate Improved Prompt</span>
+              ) : (
+                <>
+                  <span>Next</span>
+                  <svg
+                    className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
             </Button>
           </div>
           {!hideSkip && (

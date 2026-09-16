@@ -10,6 +10,16 @@ const ELEMENTS: { key: keyof ScoreBreakdown; label: string }[] = [
   { key: 'constraints', label: 'Constraints' },
 ]
 
+function renderStatusBadge(val: unknown) {
+  if (val === true || val === 'full') {
+    return <span className="text-sm w-4 text-center" title="Fully specified (16.7 pts)">✅</span>
+  }
+  if (val === 'partial') {
+    return <span className="text-sm w-4 text-center" title="Partially specified / Needs more detail (8.3 pts)">⚠️</span>
+  }
+  return <span className="text-sm w-4 text-center" title="Missing (0 pts)">❌</span>
+}
+
 interface ScoreRingProps {
   score: number
   label: string
@@ -117,11 +127,18 @@ export function ScoreDisplay({
               transition={{ delay: 0.8 + i * 0.06 }}
               className="flex items-center justify-between py-2.5 border-b border-slate-200 dark:border-white/[0.04] last:border-0"
             >
-              <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{label}</span>
+                {before === 'partial' && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    Partial
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm w-4 text-center">{before ? '✅' : '❌'}</span>
+                {renderStatusBadge(before)}
                 <span className="text-slate-400 dark:text-slate-600 text-xs">→</span>
-                <span className="text-sm w-4 text-center">{after ? '✅' : '❌'}</span>
+                {renderStatusBadge(after)}
               </div>
             </motion.div>
           )

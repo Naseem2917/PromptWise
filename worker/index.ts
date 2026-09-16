@@ -42,6 +42,28 @@ function safeParseJSON(raw: string): unknown {
 }
 
 /**
+ * Calculate deterministic score (0 to 100) from 6-point breakdown.
+ * Evaluates 3-state elements:
+ * - full / true: 1.0 weight (16.7 pts)
+ * - partial: 0.5 weight (8.3 pts)
+ * - missing / false: 0 weight (0 pts)
+ */
+function calculateScoreFromBreakdown(breakdown?: Record<string, unknown>): number {
+	if (!breakdown || typeof breakdown !== 'object') return 0
+	const keys = ['goal', 'context', 'audience', 'specificity', 'outputFormat', 'constraints']
+	let weightedSum = 0
+	for (const k of keys) {
+		const val = breakdown[k]
+		if (val === true || val === 'full') {
+			weightedSum += 1.0
+		} else if (val === 'partial') {
+			weightedSum += 0.5
+		}
+	}
+	return Math.round((weightedSum / 6) * 100)
+}
+
+/**
  * Returns true if the HTTP status code signals a transient/overload error
  * that warrants trying the next model in the fallback chain.
  * Non-retryable errors (401, 403, 400, etc.) will NOT trigger a model switch.
@@ -160,14 +182,14 @@ Return status "needs_clarification" and ask ONLY this single question:
 {
   "status": "needs_clarification",
   "needsQuestions": true,
-  "scoreBefore": 20,
+  "scoreBefore": 0,
   "scoreBreakdown": {
-    "goal": false,
-    "context": false,
-    "audience": false,
-    "specificity": false,
-    "outputFormat": false,
-    "constraints": false
+    "goal": "missing",
+    "context": "missing",
+    "audience": "missing",
+    "specificity": "missing",
+    "outputFormat": "missing",
+    "constraints": "missing"
   },
   "questions": [
     {
@@ -179,21 +201,52 @@ Return status "needs_clarification" and ask ONLY this single question:
 }
 
 CASE 2: If the input is meaningful ("valid"):
-Evaluate it against the 6 core elements:
-1. goal        — Clear objective
-2. context     — Background information
-3. audience    — Target reader or consumer
-4. specificity — Specific technical/subject details
-5. outputFormat — Desired layout/structure
-6. constraints — Boundaries or negative rules
+Evaluate each of the 6 core elements using the 3-STATE EVIDENCE SYSTEM:
+Each element MUST be evaluated as either "full", "partial", or "missing":
+- "full": Explicitly and clearly stated by the student.
+- "partial": Implied, hinted at, surface-level, or broad/vague (e.g., student mentions simple language implying beginner level, but without explicitly naming the reader; or general topic mentioned but without defined sub-boundaries).
+- "missing": Completely absent.
 
-Score: each present element = approximately 16-17 points (max 100).
+1. goal ("full" | "partial" | "missing"):
+   - "full": Clearly states the exact task/action (e.g. "Explain recursion", "Write a cold email", "Summarize an article").
+   - "partial": Ambiguous action (e.g. "something with recursion", "python doubt").
+   - "missing": No action specified.
 
-Identify only what is GENUINELY MISSING and generate 0 to 4 adaptive, smart follow-up questions:
-- NEVER automatically ask fixed questions (audience, format, style) unless genuinely needed.
-- NEVER repeat information the student has already provided in the prompt or previous clarifications.
+2. context ("full" | "partial" | "missing"):
+   - "full": Explicitly describes situational background, use case, project details, or environment (e.g., "for my final year CS project", "preparing for a Google interview", "we are deploying on AWS").
+   - "partial": Mentions a brief setting without depth (e.g., "for my college", "for an exam").
+   - "missing": No background, environment, or use case provided.
+
+3. audience ("full" | "partial" | "missing"):
+   - "full": Explicitly specifies target reader/learner persona (e.g., "for a 1st-year BCA beginner", "for busy senior recruiters", "explain to a 10-year-old").
+   - "partial": Implied through tone/adjectives without defining the persona (e.g., "in simple language" or "in easy hinglish" implies beginner level, but does not explicitly name the audience persona).
+   - "missing": No target reader or learner mentioned or implied.
+
+4. specificity ("full" | "partial" | "missing"):
+   - "full": Clearly narrows scope to exact subtopics, functions, libraries, or edge cases (e.g., "singly linked lists traversal in C++", "cold email for an entry-level Python role highlighting REST APIs").
+   - "partial": Mentions a broad domain or general concept (e.g., "recursion in data structures" or "Python development") without granular subtopic boundaries.
+   - "missing": Bare 1-word topic (e.g. "Python", "resume").
+
+5. outputFormat ("full" | "partial" | "missing"):
+   - "full": Explicit structural layout requested (e.g., "comparison table", "bullet points with code snippets", "3 short paragraphs with placeholders").
+   - "partial": Vague structure mentioned (e.g. "keep it structured", "step by step").
+   - "missing": No format requested.
+
+6. constraints ("full" | "partial" | "missing"):
+   - "full": Explicit boundaries, negative rules, word limits, or language/tone constraints (e.g., "in simple hinglish", "under 150 words", "avoid technical jargon").
+   - "partial": General tone mentioned (e.g. "make it good", "short").
+   - "missing": No boundaries or constraints given.
+
+CRITICAL RULE — TOPIC KEYWORD ISOLATION:
+If the user's prompt is asking TO LEARN ABOUT prompt engineering concepts (e.g. "Explain The 6 Core Building Blocks: Goal, Context, Audience, Specificity, Output Format, Constraints"), those words are the SUBJECT MATTER of their study, NOT metadata they provided! You must evaluate whether they provided their OWN audience, their OWN context, their OWN output format. If not, mark them "missing"!
+
+CRITICAL RULE — QUESTION ↔ BREAKDOWN CONSISTENCY:
+If you generate a follow-up question asking the student about an element (e.g. asking about audience, context, or format), that corresponding element in scoreBreakdown MUST NOT be "full"! (It should be "missing" or "partial").
+
+Generate 0 to 4 adaptive follow-up questions ONLY for elements that are "missing" or "partial":
+- If all needed elements are already "full" or prompt is fully detailed, set needsQuestions: false and questions: [].
 - Follow-up questions can be either "options" (mutually exclusive choices, provide 3-4 options) or "text" (open-ended short answer, omit options) depending on what is most helpful.
-- QUESTION ORDERING: Always place "options" questions FIRST, and place open-ended "text" questions LAST in the questions array so users answer quick choices first before typing.
+- QUESTION ORDERING: Always place "options" questions FIRST, and place open-ended "text" questions LAST in the questions array.
 
 Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
 {
@@ -201,12 +254,12 @@ Return ONLY valid JSON (no markdown fences, no explanation outside JSON):
   "needsQuestions": boolean,
   "scoreBefore": number,
   "scoreBreakdown": {
-    "goal": boolean,
-    "context": boolean,
-    "audience": boolean,
-    "specificity": boolean,
-    "outputFormat": boolean,
-    "constraints": boolean
+    "goal": "full | partial | missing",
+    "context": "full | partial | missing",
+    "audience": "full | partial | missing",
+    "specificity": "full | partial | missing",
+    "outputFormat": "full | partial | missing",
+    "constraints": "full | partial | missing"
   },
   "questions": [
     {
@@ -235,12 +288,12 @@ Return ONLY valid JSON (no markdown, no explanation outside JSON):
   "improvedPrompt": "string (the complete improved prompt, use newlines for readability)",
   "scoreAfter": number,
   "scoreBreakdown": {
-    "goal": boolean,
-    "context": boolean,
-    "audience": boolean,
-    "specificity": boolean,
-    "outputFormat": boolean,
-    "constraints": boolean
+    "goal": "full | partial | missing",
+    "context": "full | partial | missing",
+    "audience": "full | partial | missing",
+    "specificity": "full | partial | missing",
+    "outputFormat": "full | partial | missing",
+    "constraints": "full | partial | missing"
   },
   "explanation": [
     {
@@ -309,8 +362,36 @@ export default {
 						if (a.type !== 'text' && b.type === 'text') return -1
 						return 0
 					})
+
+					// Question ↔ Breakdown consistency guard:
+					// If a question asks about audience, context, format, etc., that element MUST NOT be full/true!
+					if (parsed.scoreBreakdown && typeof parsed.scoreBreakdown === 'object') {
+						for (const q of parsed.questions) {
+							const qText = `${q.id} ${q.question}`.toLowerCase()
+							if (qText.includes('audience') || qText.includes('who is') || qText.includes('target reader')) {
+								if (parsed.scoreBreakdown.audience === true || parsed.scoreBreakdown.audience === 'full') {
+									parsed.scoreBreakdown.audience = 'missing'
+								}
+							}
+							if (qText.includes('context') || qText.includes('background') || qText.includes('scenario') || qText.includes('use case')) {
+								if (parsed.scoreBreakdown.context === true || parsed.scoreBreakdown.context === 'full') {
+									parsed.scoreBreakdown.context = 'missing'
+								}
+							}
+							if (qText.includes('format') || qText.includes('layout') || qText.includes('structure')) {
+								if (parsed.scoreBreakdown.outputFormat === true || parsed.scoreBreakdown.outputFormat === 'full') {
+									parsed.scoreBreakdown.outputFormat = 'missing'
+								}
+							}
+						}
+					}
 				}
-				console.log(`[analyze] model=${modelUsed} latency=${latencyMs}ms`)
+
+				// Deterministic Score Calculation: Math.round((trueCount / 6) * 100)
+				if (parsed?.scoreBreakdown) {
+					parsed.scoreBefore = calculateScoreFromBreakdown(parsed.scoreBreakdown)
+				}
+				console.log(`[analyze] model=${modelUsed} scoreBefore=${parsed?.scoreBefore} latency=${latencyMs}ms`)
 
 				return Response.json({ success: true, data: parsed }, { headers: CORS_HEADERS })
 			} catch (err: unknown) {
@@ -340,7 +421,7 @@ export default {
 					clarifications?: string[]
 					answers?: Record<string, string | string[]>
 					scoreBefore?: number
-					scoreBreakdown?: Record<string, boolean>
+					scoreBreakdown?: Record<string, unknown>
 					mode?: string
 				}
 				const { originalPrompt, clarifications, answers, scoreBefore, scoreBreakdown, mode } = body
@@ -381,13 +462,20 @@ export default {
 					IMPROVE_SYSTEM_PROMPT,
 				)
 
-				const parsed = safeParseJSON(text) as Record<string, unknown>
+				const parsed = safeParseJSON(text) as any
+
+				// Calculate deterministic scoreAfter directly from scoreBreakdown
+				if (parsed?.scoreBreakdown) {
+					parsed.scoreAfter = calculateScoreFromBreakdown(parsed.scoreBreakdown)
+				}
+
+				// Monotonic safety: improved prompt score must not fall below original score
 				if (parsed && typeof parsed.scoreAfter === 'number' && typeof scoreBefore === 'number') {
 					if (parsed.scoreAfter < scoreBefore) {
 						parsed.scoreAfter = Math.min(100, Math.max(scoreBefore, parsed.scoreAfter))
 					}
 				}
-				console.log(`[improve] mode=${normalisedMode} model=${modelUsed} latency=${latencyMs}ms`)
+				console.log(`[improve] mode=${normalisedMode} model=${modelUsed} scoreAfter=${parsed?.scoreAfter} latency=${latencyMs}ms`)
 
 				return Response.json({ success: true, data: parsed }, { headers: CORS_HEADERS })
 			} catch (err: unknown) {

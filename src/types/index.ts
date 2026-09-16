@@ -9,14 +9,17 @@ export interface Question {
   options?: string[]
 }
 
+// Scoring element status: true/'full' = completely present (1.0), 'partial' = vague/implied (~0.5), false/'missing' = absent (0)
+export type ElementScoreStatus = boolean | 'full' | 'partial' | 'missing'
+
 // Scoring breakdown across 6 prompt elements
 export interface ScoreBreakdown {
-  goal: boolean
-  context: boolean
-  audience: boolean
-  specificity: boolean
-  outputFormat: boolean
-  constraints: boolean
+  goal: ElementScoreStatus
+  context: ElementScoreStatus
+  audience: ElementScoreStatus
+  specificity: ElementScoreStatus
+  outputFormat: ElementScoreStatus
+  constraints: ElementScoreStatus
 }
 
 // Response from POST /api/analyze

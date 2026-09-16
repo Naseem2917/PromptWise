@@ -40,30 +40,118 @@ function sortFollowUpQuestions(questions?: Question[]): Question[] {
   })
 }
 
+// ── Storage Keys & Types ──────────────────────────────────────────────────────
+const IMPROVE_STORAGE_KEY = 'promptwise_improve_session'
+
+interface StoredImproveState {
+  step: WorkflowStep
+  mode: ResponseMode
+  originalPrompt: string
+  clarifications: string[]
+  analyzeResult: AnalyzeResponse | null
+  currentQuestionIdx: number
+  answers: QuestionAnswers
+  improveResult: ImproveResponse | null
+  savedPromptId: string | null
+  isBookmarked: boolean
+}
+
+function getStoredImprove(): StoredImproveState | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(IMPROVE_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as StoredImproveState
+    if (parsed && typeof parsed.step === 'string') {
+      return parsed
+    }
+  } catch (e) {
+    console.error('Failed to load stored improve session:', e)
+  }
+  return null
+}
+
+function saveImproveToSession(state: StoredImproveState) {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(IMPROVE_STORAGE_KEY, JSON.stringify(state))
+  } catch (e) {
+    console.error('Failed to save improve session:', e)
+  }
+}
+
+function clearStoredImprove() {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.removeItem(IMPROVE_STORAGE_KEY)
+  } catch (e) {}
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export function Improve() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const initialPromptFromUrl = searchParams.get('prompt') ?? ''
-  const [step, setStep] = useState<WorkflowStep>('input')
-  const [mode, setMode] = useState<ResponseMode>('medium')
-  const [originalPrompt, setOriginalPrompt] = useState(initialPromptFromUrl)
-  const [clarifications, setClarifications] = useState<string[]>([])
+
+  const initialStored = getStoredImprove()
+
+  // If coming with a fresh URL ?prompt=, prioritize URL prompt and reset to input
+  const hasUrlPrompt = !!initialPromptFromUrl
+
+  const [step, setStep] = useState<WorkflowStep>(() => {
+    if (hasUrlPrompt) return 'input'
+    // If user was in the middle of a loading skeleton, restore to a safe interactive step
+    if (initialStored?.step === 'analyzing') return 'input'
+    if (initialStored?.step === 'improving') return initialStored?.analyzeResult ? 'questions' : 'input'
+    return initialStored?.step ?? 'input'
+  })
+  const [mode, setMode] = useState<ResponseMode>(() => hasUrlPrompt ? 'medium' : (initialStored?.mode ?? 'medium'))
+  const [originalPrompt, setOriginalPrompt] = useState(() => initialPromptFromUrl || (initialStored?.originalPrompt ?? ''))
+  const [clarifications, setClarifications] = useState<string[]>(() => hasUrlPrompt ? [] : (initialStored?.clarifications ?? []))
 
   useEffect(() => {
     if (initialPromptFromUrl) {
       setOriginalPrompt(initialPromptFromUrl)
+      setStep('input')
     }
   }, [initialPromptFromUrl])
-  const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResponse | null>(null)
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0)
-  const [answers, setAnswers] = useState<QuestionAnswers>({})
-  const [improveResult, setImproveResult] = useState<ImproveResponse | null>(null)
+
+  const [analyzeResult, setAnalyzeResult] = useState<AnalyzeResponse | null>(() => hasUrlPrompt ? null : (initialStored?.analyzeResult ?? null))
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(() => hasUrlPrompt ? 0 : (initialStored?.currentQuestionIdx ?? 0))
+  const [answers, setAnswers] = useState<QuestionAnswers>(() => hasUrlPrompt ? {} : (initialStored?.answers ?? {}))
+  const [improveResult, setImproveResult] = useState<ImproveResponse | null>(() => hasUrlPrompt ? null : (initialStored?.improveResult ?? null))
   const [error, setError] = useState<string | null>(null)
   const [errorKey, setErrorKey] = useState(0)
-  const [savedPromptId, setSavedPromptId] = useState<string | null>(null)
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [savedPromptId, setSavedPromptId] = useState<string | null>(() => hasUrlPrompt ? null : (initialStored?.savedPromptId ?? null))
+  const [isBookmarked, setIsBookmarked] = useState(() => hasUrlPrompt ? false : (initialStored?.isBookmarked ?? false))
   const [isSaving, setIsSaving] = useState(false)
+
+  // Sync state to sessionStorage whenever key workflow states change
+  useEffect(() => {
+    saveImproveToSession({
+      step,
+      mode,
+      originalPrompt,
+      clarifications,
+      analyzeResult,
+      currentQuestionIdx,
+      answers,
+      improveResult,
+      savedPromptId,
+      isBookmarked,
+    })
+  }, [
+    step,
+    mode,
+    originalPrompt,
+    clarifications,
+    analyzeResult,
+    currentQuestionIdx,
+    answers,
+    improveResult,
+    savedPromptId,
+    isBookmarked,
+  ])
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -288,6 +376,7 @@ export function Improve() {
 
   // ── Reset ────────────────────────────────────────────────────────────────
   const handleReset = () => {
+    clearStoredImprove()
     setStep('input')
     setOriginalPrompt('')
     setClarifications([])
@@ -376,6 +465,23 @@ export function Improve() {
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-indigo-600/[0.07] rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="w-full max-w-3xl">
+        {/* Top Bar Navigation: Easily start a new prompt from anywhere */}
+        {step !== 'input' && (
+          <div className="flex items-center justify-between mb-4 px-1">
+            <button
+              onClick={handleReset}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/80 dark:border-indigo-500/20 shadow-2xs hover:shadow-xs"
+              title="Start a new prompt improvement"
+            >
+              <span>✨</span>
+              <span>Improve Another Prompt</span>
+            </button>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+              Progress saved in session
+            </span>
+          </div>
+        )}
+
         {/* Step Indicator */}
         <StepIndicator currentStep={activeStep} totalSteps={totalSteps} />
 

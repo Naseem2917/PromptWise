@@ -79,12 +79,18 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
   - **Two-Way Follow-Up Navigation (Stage B)**: Dynamic choice pills or open text to extract missing context. Features a **`← Back` Button** allowing users to return to previous questions with their selected options or custom answers preserved and pre-filled. Single-word answers (e.g. `"TYBSCIT"`, `"Python"`, `"Beginner"`) are cleanly accepted.
   - **Smart Follow-Up Sequencing (Options First, Text Last)**: Option-based questions (`single_choice`, `multi_choice`, `toggle`) are systematically ordered first, placing open-ended `text` questions at the very end to minimize typing fatigue and maximize user momentum.
   - **Final Synthesis (Stage C)**: Generates a high-impact prompt with role/persona, context, specific tasks, formatting, and constraints.
+- **Active Session Progress Preservation**: Navigating away from `/improve` to check notes or examples preserves your active prompt, clarification state, answered follow-up questions, and results without restarting or re-running analysis.
 - **Direct Chatbot Quick Launch Toolbar**:
   - Direct 1-click launch buttons for **ChatGPT**, **Google Gemini**, and **Claude** using official SVG brand logos.
   - Available across **Improve Results**, **Dashboard**, and **Prompt History**.
   - **Claude Auto-Prefill + Clipboard Fallback**: Auto-prefills prompts into Claude via `?q=` with a background clipboard copy fallback for instant Ctrl+V pasting.
-- **Accurate Scoring & Monotonic Improvement**:
-  - Diagnostic scorecard (0–100) evaluating Goal, Context, Audience, Specificity, Format, and Constraints.
+- **Accurate Scoring & Deterministic 3-State Diagnostic**:
+  - Deterministic scorecard calculated strictly from the 6 core elements: `Math.round((weightedSum / 6) * 100)`:
+    - **Full (✅)**: Explicitly and clearly specified (1.0 weight ≈ 16.7 pts).
+    - **Partial (⚠️)**: Implied, hinted at, or broad/vague without defined boundaries (0.5 weight ≈ 8.3 pts).
+    - **Missing (❌)**: Completely absent (0 weight = 0 pts).
+  - **Strict Evidence Rule**: An element is never assumed or marked `full` unless explicitly stated by the student.
+  - **Question ↔ Breakdown Consistency**: System guarantees that if a follow-up question is asked for an element (e.g. audience), that element cannot be marked `full` in the initial breakdown.
   - Guaranteed monotonic scoring: improved prompts never drop in score relative to the initial prompt.
 - **Before & After Visualizer**: Side-by-side comparison with one-click copy and auto-saving.
 - **"What Changed & Why" Breakdown**: Teaches students why each addition was made.
@@ -185,20 +191,21 @@ graph TD
         D -->|Not Pass| C
         D -->|Pass| E
         
-        E --> F["Gemini Flash Lite (Intent Check)"]
-        F --> G{"Is Prompt Actionable?"}
+        E --> F["Gemini Flash Lite (Intent & 6-Point Check)"]
+        F --> G{"Prompt Evaluation"}
         
         G -->|Vague / Incomplete| C
     end
 
-    subgraph StageB["Stage B: Context Enrichment"]
-        G -->|Actionable| H["Generate 0 to 4 Adaptive Questions"]
-        H --> I["Follow-Up Questions (Radio Pills / Checkbox / Free Text)"]
-        I --> J["User Answers / Skips (Validate Locally Only: isObviousGarbage)"]
+    subgraph StageB["Stage B: Context Enrichment (Adaptive Questions)"]
+        G -->|Missing Elements / needsQuestions: true| H["Generate 1 to 4 Adaptive Questions"]
+        H --> I["Follow-Up Questions (Pills / Checkbox / Text)"]
+        I --> J["User Answers / Skips (Local Validation)"]
     end
 
     subgraph StageC["Stage C: Multi-Model Synthesis & Scoring"]
-        J --> K["POST /api/improve (Edge Gateway)"]
+        G -->|Already Complete / needsQuestions: false| K["Direct Bypass: POST /api/improve"]
+        J --> K
         K --> L["Gemini Failover Chain (3.5-Lite / 3.6 / 3.7)"]
         L --> M["Enhanced Prompt + Multi-Metric Score Breakdown"]
         M --> N{"User Logged In?"}
@@ -219,20 +226,21 @@ graph TD
    - When you type your clear intent:
      - If it still doesn't pass, it loops back to check again.
      - If it passes (or if your initial prompt was already valid), it moves straight to the Cloudflare Edge Worker (`POST /api/analyze`).
-2. **Actionability Check with Gemini Flash Lite**:
-   - Gemini checks if the prompt is actionable and clear.
-   - **Vague / Incomplete** (e.g., *"help me"* or *"fast"*): It asks for clarification and loops back so you can provide better details.
-   - **Actionable**: It adopts this as the official **Verified Original Prompt**. Notice the dotted line in the diagram: this verified prompt is immediately tagged to be stored in history (any initial garbage is discarded forever).
+2. **Actionability & 6-Point Evaluation with Gemini Flash Lite**:
+   - Gemini evaluates the prompt against the 6 core elements (Goal, Context, Audience, Specificity, Output Format, Constraints).
+   - **Vague / Incomplete** (e.g., *"help me"* or *"fast"*): Asks for clarification and loops back.
+   - **Needs Detail (`needsQuestions: true`)**: Moves to **Stage B** for targeted follow-up questions.
+   - **⚡ Direct Stage A → Stage C Fast-Track (`needsQuestions: false`)**: If the user's initial prompt is already comprehensive, highly specific, or contains all necessary elements (e.g., an already well-structured prompt scoring 80–100), PromptWise **skips Stage B entirely**! It avoids asking redundant, annoying questions and immediately fast-tracks directly to **Stage C** to polish formatting, persona assignment, and score verification.
 
 #### 🎯 Stage B: Context Enrichment (Adaptive Questions)
-1. **0 to 4 Smart Questions**: Gemini automatically creates 0–4 targeted follow-up questions to understand your target audience, goals, style, and constraints.
-2. **Interactive Choices**: Rendered as easy clickable radio pills, checkboxes, or free text.
+1. **1 to 4 Smart Questions**: For prompts with missing or partial elements, Gemini creates 1–4 targeted follow-up questions to understand your target audience, goals, style, and constraints.
+2. **Interactive Choices**: Rendered as easy clickable radio pills, checkboxes, or free text (with option-based questions sorted first and text last).
 3. **Local Check & Skip**: Answers are checked locally on your device. You can freely skip questions without triggering unnecessary Gemini calls or false errors.
 
 #### ✨ Stage C: Multi-Model Synthesis & Scoring
-1. **Edge Gateway Improvement (`POST /api/improve`)**: Sends your verified original prompt together with your answers to the Cloudflare Edge Worker.
+1. **Edge Gateway Improvement (`POST /api/improve`)**: Receives the verified original prompt (either directly from Stage A fast-track or alongside Stage B follow-up answers) at the Cloudflare Edge Worker.
 2. **Gemini Failover Chain**: Automatically chains `gemini-3.5-flash-lite` ⇄ `gemini-3.6-flash` ⇄ `gemini-3.7-flash` for high reliability and zero downtime.
-3. **Final Result & Scoring**: Generates your enhanced prompt, side-by-side Before/After comparison, score improvements (Clarity, Specificity, Context, Constraints), and a *"What Changed & Why"* explanation.
+3. **Final Result & Scoring**: Generates your enhanced prompt, side-by-side Before/After comparison, 3-state score improvements (Full ✅, Partial ⚠️, Missing ❌), and educational *"What Changed & Why"* explanations.
 
 #### 🔒 Database & History (Privacy by Design)
 - **User Logged In (Yes)**: The prompt is saved to **Firebase Firestore**. It saves the **Verified Original Prompt** and the **Improved Prompt**. Unverified keyboard smashes or initial garbage are **NEVER saved**.

@@ -315,19 +315,25 @@ export function Practice() {
 
               {/* Breakdown Grid */}
               <div className="grid grid-cols-3 gap-2 mb-4">
-                {Object.entries(analysis.scoreBreakdown).map(([key, ok]) => (
-                  <div
-                    key={key}
-                    className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-medium flex items-center justify-between ${
-                      ok
-                        ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                        : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'
-                    }`}
-                  >
-                    <span className="capitalize">{key}</span>
-                    <span>{ok ? '✓' : '✗'}</span>
-                  </div>
-                ))}
+                {Object.entries(analysis.scoreBreakdown).map(([key, val]) => {
+                  const isFull = val === true || val === 'full'
+                  const isPartial = val === 'partial'
+                  return (
+                    <div
+                      key={key}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-medium flex items-center justify-between ${
+                        isFull
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                          : isPartial
+                          ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400'
+                          : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'
+                      }`}
+                    >
+                      <span className="capitalize">{key}</span>
+                      <span>{isFull ? '✓' : isPartial ? '⚠️' : '✗'}</span>
+                    </div>
+                  )
+                })}
               </div>
 
               {analysis.questions.length > 0 && (

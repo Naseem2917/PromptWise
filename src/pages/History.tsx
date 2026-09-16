@@ -170,19 +170,9 @@ export function History() {
                         </div>
                       </div>
 
-                      {/* Chatbot Quick Launch & Action Toolbar */}
-                      <div className="pt-3 border-t border-slate-200/60 dark:border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex-1">
-                          <ChatbotToolbar prompt={prompt.improvedPrompt} compact />
-                        </div>
-                        <button
-                          onClick={(e) => handleDeletePrompt(prompt.id, e)}
-                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 transition-colors cursor-pointer shrink-0 self-end sm:self-center"
-                          title="Delete prompt from history"
-                        >
-                          <span>🗑️</span>
-                          <span>Delete Prompt</span>
-                        </button>
+                      {/* Chatbot Quick Launch Toolbar */}
+                      <div className="pt-3 border-t border-slate-200/60 dark:border-white/[0.06]">
+                        <ChatbotToolbar prompt={prompt.improvedPrompt} compact />
                       </div>
                     </motion.div>
                   )}
