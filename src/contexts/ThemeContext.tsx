@@ -15,17 +15,11 @@ const THEME_KEY = 'promptwise-theme'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // 1. Check saved local preference
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(THEME_KEY) as Theme | null
       if (saved === 'light' || saved === 'dark') return saved
-
-      // 2. Fallback to system OS preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark'
-      }
     }
-    return 'dark' // Default to polished dark mode
+    return 'dark'
   })
 
   useEffect(() => {
@@ -37,7 +31,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.classList.remove('dark')
       root.classList.add('light')
     }
-    localStorage.setItem(THEME_KEY, theme)
+    try {
+      localStorage.setItem(THEME_KEY, theme)
+    } catch (e) {}
   }, [theme])
 
   const toggleTheme = () => {

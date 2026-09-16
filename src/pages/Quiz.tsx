@@ -30,24 +30,83 @@ async function fetchQuizQuestions(): Promise<QuizQuestion[]> {
   return json.data!.questions
 }
 
+// ── Storage Keys ─────────────────────────────────────────────────────────────
+const QUIZ_STORAGE_KEY = 'promptwise_quiz_session'
+
+interface StoredQuizState {
+  questions: QuizQuestion[]
+  currentIdx: number
+  selectedOption: number | null
+  isAnswered: boolean
+  score: number
+  quizFinished: boolean
+}
+
+function getStoredQuiz(): StoredQuizState | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(QUIZ_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as StoredQuizState
+    if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+      return parsed
+    }
+  } catch (e) {
+    console.error('Failed to load stored quiz:', e)
+  }
+  return null
+}
+
+function saveQuizToSession(state: StoredQuizState) {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(state))
+  } catch (e) {
+    console.error('Failed to save quiz state:', e)
+  }
+}
+
+function clearStoredQuiz() {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.removeItem(QUIZ_STORAGE_KEY)
+  } catch (e) {}
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function Quiz() {
   const { user } = useAuth()
 
+  const initialStored = getStoredQuiz()
+
   // ── Quiz data state
-  const [questions, setQuestions] = useState<QuizQuestion[]>([])
-  const [loading, setLoading] = useState(true)
+  const [questions, setQuestions] = useState<QuizQuestion[]>(() => initialStored?.questions ?? [])
+  const [loading, setLoading] = useState<boolean>(() => !initialStored || initialStored.questions.length === 0)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   // ── Quiz progress state
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const [selectedOption, setSelectedOption] = useState<number | null>(null)
-  const [isAnswered, setIsAnswered] = useState(false)
-  const [score, setScore] = useState(0)
-  const [quizFinished, setQuizFinished] = useState(false)
+  const [currentIdx, setCurrentIdx] = useState<number>(() => initialStored?.currentIdx ?? 0)
+  const [selectedOption, setSelectedOption] = useState<number | null>(() => initialStored?.selectedOption ?? null)
+  const [isAnswered, setIsAnswered] = useState<boolean>(() => initialStored?.isAnswered ?? false)
+  const [score, setScore] = useState<number>(() => initialStored?.score ?? 0)
+  const [quizFinished, setQuizFinished] = useState<boolean>(() => initialStored?.quizFinished ?? false)
 
-  // ── Load questions ─────────────────────────────────────────────────────────
+  // Sync state to sessionStorage whenever progress changes
+  useEffect(() => {
+    if (questions.length > 0) {
+      saveQuizToSession({
+        questions,
+        currentIdx,
+        selectedOption,
+        isAnswered,
+        score,
+        quizFinished,
+      })
+    }
+  }, [questions, currentIdx, selectedOption, isAnswered, score, quizFinished])
+
+  // ── Load questions (fresh from AI) ─────────────────────────────────────────
   const loadQuestions = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
@@ -56,6 +115,7 @@ export function Quiz() {
     setIsAnswered(false)
     setScore(0)
     setQuizFinished(false)
+    clearStoredQuiz()
     try {
       const qs = await fetchQuizQuestions()
       setQuestions(qs)
@@ -66,8 +126,11 @@ export function Quiz() {
     }
   }, [])
 
+  // On mount: only fetch if there is NO existing quiz stored in session
   useEffect(() => {
-    loadQuestions()
+    if (!initialStored || initialStored.questions.length === 0) {
+      loadQuestions()
+    }
   }, [loadQuestions])
 
   // ── Quiz handlers ──────────────────────────────────────────────────────────
@@ -104,7 +167,7 @@ export function Quiz() {
   }
 
   const handleRestart = () => {
-    loadQuestions()  // fetch fresh questions from AI
+    loadQuestions()  // fetch fresh questions from AI on user click
   }
 
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
@@ -202,10 +265,21 @@ export function Quiz() {
 
       {!quizFinished ? (
         <div className="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
-          {/* Progress bar */}
+          {/* Progress bar and control */}
           <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-3">
-            <span>Question {currentIdx + 1} of {questions.length}</span>
-            <span>Score: {score}/{currentIdx + (isAnswered ? 1 : 0)}</span>
+            <div className="flex items-center gap-3">
+              <span>Question {currentIdx + 1} of {questions.length}</span>
+              <span className="text-slate-300 dark:text-slate-600">·</span>
+              <span>Score: {score}/{currentIdx + (isAnswered ? 1 : 0)}</span>
+            </div>
+            <button
+              onClick={handleRestart}
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-semibold cursor-pointer flex items-center gap-1 px-2 py-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+              title="Generate a brand new set of questions"
+            >
+              <span>🔄</span>
+              <span>New Quiz</span>
+            </button>
           </div>
           <div className="w-full bg-slate-200 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden mb-6">
             <div

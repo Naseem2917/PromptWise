@@ -40,46 +40,15 @@ function sortFollowUpQuestions(questions?: Question[]): Question[] {
   })
 }
 
-// Helper to get saved mode for user
-function getSavedMode(userId?: string): ResponseMode {
-  if (!userId) return 'medium'
-  try {
-    const saved = localStorage.getItem(`promptwise_mode_${userId}`) as ResponseMode | null
-    if (saved && ['low', 'medium', 'high'].includes(saved)) return saved
-  } catch (e) {
-    console.error('Failed to read saved mode:', e)
-  }
-  return 'medium'
-}
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export function Improve() {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const initialPromptFromUrl = searchParams.get('prompt') ?? ''
   const [step, setStep] = useState<WorkflowStep>('input')
-  const [mode, setMode] = useState<ResponseMode>(() => getSavedMode(user?.uid))
+  const [mode, setMode] = useState<ResponseMode>('medium')
   const [originalPrompt, setOriginalPrompt] = useState(initialPromptFromUrl)
   const [clarifications, setClarifications] = useState<string[]>([])
-
-  // Keep mode in sync if user signs in or changes
-  useEffect(() => {
-    if (user?.uid) {
-      const userMode = getSavedMode(user.uid)
-      setMode(userMode)
-    }
-  }, [user?.uid])
-
-  const handleModeChange = useCallback((newMode: ResponseMode) => {
-    setMode(newMode)
-    if (user?.uid) {
-      try {
-        localStorage.setItem(`promptwise_mode_${user.uid}`, newMode)
-      } catch (e) {
-        console.error('Failed to persist mode:', e)
-      }
-    }
-  }, [user?.uid])
 
   useEffect(() => {
     if (initialPromptFromUrl) {
@@ -167,7 +136,7 @@ export function Improve() {
   // ── Handle prompt submit (Stage A: Initial Verification) ──────────────────
   const handlePromptSubmit = useCallback(
     async (prompt: string, selectedMode: ResponseMode) => {
-      handleModeChange(selectedMode)      // persist preference and store state
+      setMode(selectedMode)               // store once — not asked again
       setOriginalPrompt(prompt)
       setClarifications([])
       setAnswers({})
@@ -457,12 +426,7 @@ export function Improve() {
                 </p>
               </div>
 
-              <PromptInput
-                onSubmit={handlePromptSubmit}
-                onModeChange={handleModeChange}
-                defaultValue={originalPrompt}
-                defaultMode={mode}
-              />
+              <PromptInput onSubmit={handlePromptSubmit} defaultValue={originalPrompt} defaultMode={mode} />
             </motion.div>
           )}
 

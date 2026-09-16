@@ -79,7 +79,6 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
   - **Two-Way Follow-Up Navigation (Stage B)**: Dynamic choice pills or open text to extract missing context. Features a **`← Back` Button** allowing users to return to previous questions with their selected options or custom answers preserved and pre-filled. Single-word answers (e.g. `"TYBSCIT"`, `"Python"`, `"Beginner"`) are cleanly accepted.
   - **Smart Follow-Up Sequencing (Options First, Text Last)**: Option-based questions (`single_choice`, `multi_choice`, `toggle`) are systematically ordered first, placing open-ended `text` questions at the very end to minimize typing fatigue and maximize user momentum.
   - **Final Synthesis (Stage C)**: Generates a high-impact prompt with role/persona, context, specific tasks, formatting, and constraints.
-- **Persistent Model Preference**: Remembers the logged-in user's last selected Response Mode (Low ⚡ / Medium ⚖️ / High 🧠) across sessions and page reloads via user-scoped local persistence.
 - **Direct Chatbot Quick Launch Toolbar**:
   - Direct 1-click launch buttons for **ChatGPT**, **Google Gemini**, and **Claude** using official SVG brand logos.
   - Available across **Improve Results**, **Dashboard**, and **Prompt History**.
@@ -105,8 +104,9 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 
 ### 5. 🧠 Skills & Knowledge Quiz (`/quiz`)
 - 6-question interactive quiz testing prompt engineering principles, token economics, and LLM behavior.
+- **Session Progress Preservation**: Leaving the quiz page to explore other sections (e.g. `/learn`, `/examples`) preserves your active question, selected answers, and current score without re-triggering AI generation.
 - **`🔁 Retake Quiz` Feature**: Reset and re-attempt the exact same quiz questions to master weak spots.
-- **`🔄 New Quiz` Feature**: Fetch fresh AI-generated questions from the server.
+- **`🔄 New Quiz` Feature**: On-demand button in the header and results screen to fetch a fresh set of AI-generated questions when ready.
 - Rank and proficiency scoring from *Prompt Explorer* to *Prompt Grandmaster*.
 
 ### 6. 📊 Dashboard & History Management (`/dashboard`, `/history`)
@@ -120,6 +120,7 @@ Instead of guessing your intent, **PromptWise acts as an AI Thinking Partner**:
 - Detecting hallucinations and verifying critical facts.
 
 ### 8. 📱 Progressive Web App (PWA) & Mobile Excellence
+- **Dark & Light Mode**: Clean, persistent theme switching saved locally in browser preferences.
 - Offline caching with Workbox Service Worker.
 - Installable on mobile and desktop devices with dedicated high-res icons.
 - Mobile-first bottom navigation bar, tight vertical spacing, and responsive branding.

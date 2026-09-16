@@ -13,7 +13,6 @@ const MODES: { value: ResponseMode; icon: string; label: string; desc: string }[
 
 interface PromptInputProps {
   onSubmit: (prompt: string, mode: ResponseMode) => void
-  onModeChange?: (mode: ResponseMode) => void
   isLoading?: boolean
   error?: string | null
   defaultValue?: string
@@ -22,7 +21,6 @@ interface PromptInputProps {
 
 export function PromptInput({
   onSubmit,
-  onModeChange,
   isLoading = false,
   error,
   defaultValue = '',
@@ -94,10 +92,7 @@ export function PromptInput({
             return (
               <button
                 key={m.value}
-                onClick={() => {
-                  setMode(m.value)
-                  onModeChange?.(m.value)
-                }}
+                onClick={() => setMode(m.value)}
                 disabled={isLoading}
                 className={[
                   'flex-1 flex flex-col items-center justify-center gap-0.5 px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 cursor-pointer min-h-[56px] select-none',
