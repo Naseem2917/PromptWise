@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -99,7 +99,7 @@ function QuizSkeleton() {
       {/* Editorial Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cobalt-500/10 border border-cobalt-500/25 text-cobalt-700 dark:text-cobalt-300 text-xs font-mono font-medium tracking-wide mb-2.5">
-          <IconSparkles size={14} className="animate-spin text-cobalt-600 dark:text-cobalt-400 shrink-0" />
+          <IconSparkles size={14} className="animate-twinkle text-cobalt-600 dark:text-cobalt-400 shrink-0" />
           <span>Generating quiz questions with AI…</span>
         </div>
         <h1 className="font-serif-title text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">
@@ -222,6 +222,25 @@ export function Quiz() {
     }
   }, [loadQuestions])
 
+  // ── Quiz Card Ref & Smooth Scroll ─────────────────────────────────────────
+  const quizCardRef = useRef<HTMLDivElement>(null)
+
+  const scrollToQuestion = () => {
+    setTimeout(() => {
+      if (quizCardRef.current) {
+        const navOffset = 76 // Clearance for fixed top navbar
+        const elementPosition = quizCardRef.current.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.pageYOffset - navOffset
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth',
+        })
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }, 40)
+  }
+
   // ── Quiz handlers ──────────────────────────────────────────────────────────
   const currentQ = questions[currentIdx]
 
@@ -239,8 +258,10 @@ export function Quiz() {
       setCurrentIdx((i) => i + 1)
       setSelectedOption(null)
       setIsAnswered(false)
+      scrollToQuestion()
     } else {
       setQuizFinished(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       if (user) {
         saveQuizResult(user.uid, score, questions.length).catch(console.error)
       }
@@ -253,10 +274,12 @@ export function Quiz() {
     setIsAnswered(false)
     setScore(0)
     setQuizFinished(false)
+    scrollToQuestion()
   }
 
   const handleRestart = () => {
     loadQuestions() // fetch fresh questions from AI on user click
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
@@ -353,26 +376,27 @@ export function Quiz() {
       </motion.div>
 
       {!quizFinished ? (
-        <div className="workbench-card rounded-2xl p-6 sm:p-8 shadow-2xs">
+        <div ref={quizCardRef} className="workbench-card rounded-2xl p-6 sm:p-8 shadow-2xs scroll-mt-20">
           {/* Progress bar and control */}
-          <div className="flex items-center justify-between text-xs font-mono text-slate-600 dark:text-slate-400 mb-3">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <span className="font-semibold text-slate-900 dark:text-slate-100">
+          <div className="flex items-center justify-between gap-2.5 text-xs font-mono text-slate-600 dark:text-slate-400 mb-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap min-w-0">
+              <span className="font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                 Question {currentIdx + 1} of {questions.length}
               </span>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span>
+              <span className="text-slate-300 dark:text-slate-700 hidden xs:inline">·</span>
+              <span className="whitespace-nowrap text-slate-500 dark:text-slate-400">
                 Score: {score} / {currentIdx + (isAnswered ? 1 : 0)}
               </span>
             </div>
             <button
               type="button"
               onClick={handleRestart}
-              className="text-xs font-mono font-medium text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-cobalt-500/10 transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-mono font-medium transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 whitespace-nowrap"
               title="Generate a brand new set of questions"
             >
-              <IconRefreshCw size={13} />
-              <span>New Question Set</span>
+              <IconRefreshCw size={13} className="text-blue-600 dark:text-blue-400" />
+              <span className="hidden sm:inline">New Question Set</span>
+              <span className="sm:hidden">New Set</span>
             </button>
           </div>
 

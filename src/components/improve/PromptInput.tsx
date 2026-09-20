@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '../ui/Button'
-import { IconZap, IconScale, IconSparkles } from '../ui/Icons'
+import { IconZap, IconScale, IconBrain, IconSparkles } from '../ui/Icons'
 import type { ResponseMode } from '../../lib/api'
 
 // ── Mode config ────────────────────────────────────────────────────────────────
@@ -9,7 +9,7 @@ import type { ResponseMode } from '../../lib/api'
 const MODES: { value: ResponseMode; icon: typeof IconZap; label: string; desc: string }[] = [
   { value: 'low', icon: IconZap, label: 'Quick', desc: 'Faster response' },
   { value: 'medium', icon: IconScale, label: 'Balanced', desc: 'Good balance of speed and detail' },
-  { value: 'high', icon: IconSparkles, label: 'Detailed', desc: 'More detailed suggestions' },
+  { value: 'high', icon: IconBrain, label: 'Detailed', desc: 'More detailed suggestions' },
 ]
 
 interface PromptInputProps {
@@ -102,11 +102,10 @@ export function PromptInput({
       {/* Workbench Drafting Canvas Container */}
       <div ref={canvasRef} className="relative">
         <div
-          className={`workbench-card overflow-hidden shadow-sm transition-all duration-150 ${
-            activeError
+          className={`workbench-card overflow-hidden shadow-sm transition-all duration-150 ${activeError
               ? 'border-amber-500/80 dark:border-amber-500/70 ring-2 ring-amber-500/20'
               : ''
-          }`}
+            }`}
         >
           {/* Canvas Header */}
           <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">

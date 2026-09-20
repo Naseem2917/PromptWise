@@ -18,7 +18,7 @@ export function AnalyzeSkeleton({ prompt }: { prompt?: string }) {
       {/* Top Status Badge & Heading */}
       <div className="text-center space-y-2 mb-2">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cobalt-500/10 border border-cobalt-500/25 text-cobalt-700 dark:text-cobalt-300 text-xs font-mono font-medium tracking-wide">
-          <IconSparkles size={14} className="animate-spin" />
+          <IconSparkles size={14} className="animate-twinkle" />
           <span>Checking your prompt with AI…</span>
         </div>
         <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
@@ -93,7 +93,7 @@ export function ImproveSkeleton({ originalPrompt }: { originalPrompt?: string })
       {/* 1. Results Header Mirror */}
       <div className="text-center mb-4 space-y-2">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sage-500/15 border border-sage-500/30 text-sage-700 dark:text-sage-300 text-xs font-mono font-medium animate-pulse">
-          <IconSparkles size={14} className="animate-spin text-sage-600 dark:text-sage-400 shrink-0" />
+          <IconSparkles size={14} className="animate-twinkle text-sage-600 dark:text-sage-400 shrink-0" />
           <span>Writing your improved prompt…</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
