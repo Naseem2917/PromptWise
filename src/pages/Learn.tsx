@@ -1,11 +1,28 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import {
+  IconGraduationCap,
+  IconTerminal,
+  IconAlertCircle,
+  IconCheckCircle,
+  IconZap,
+  IconShield,
+  IconCheck,
+  IconCopy,
+  IconArrowRight,
+  IconSparkles,
+  IconLightbulb,
+  IconLock,
+  IconMessageSquare,
+  IconBookOpen,
+  IconUser,
+} from '../components/ui/Icons'
 
 interface Lesson {
   id: string
   title: string
-  icon: string
+  icon: typeof IconSparkles
   summary: string
   badPrompt: string
   badReason: string
@@ -17,22 +34,22 @@ interface Lesson {
 const FUNDAMENTALS = [
   {
     title: '1. What is Artificial Intelligence (AI)?',
-    icon: '🤖',
+    icon: IconTerminal,
     desc: 'Artificial Intelligence refers to computer systems engineered to perform tasks that historically required human intelligence — such as pattern recognition, problem solving, translation, and decision making.',
   },
   {
     title: '2. What is Generative AI?',
-    icon: '✨',
+    icon: IconSparkles,
     desc: 'Generative AI (like ChatGPT, Gemini, or Claude) uses Large Language Models (LLMs) trained on billions of texts to predict and create entirely new content — including code, essays, summaries, and images — rather than just searching a static database.',
   },
   {
     title: '3. What is a Prompt?',
-    icon: '💬',
+    icon: IconMessageSquare,
     desc: 'A prompt is the natural language instruction or query you provide to an AI model. It acts as the programming code for language models: the clearer your parameters, the more accurate the resulting output.',
   },
   {
     title: '4. What is Prompt Engineering?',
-    icon: '🧠',
+    icon: IconGraduationCap,
     desc: 'Prompt Engineering is the discipline of structuring, phrasing, and contextualizing prompts to reliably guide AI toward optimal, high-quality, and factual answers while minimizing hallucinations.',
   },
 ]
@@ -78,7 +95,7 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'goal',
     title: '1. Goal & Objective',
-    icon: '🎯',
+    icon: IconSparkles,
     summary: 'Clearly state the primary mission. Ambiguous goals produce generic summaries rather than actionable results.',
     badPrompt: 'Help me with marketing.',
     badReason: 'The AI does not know what type of marketing, the product, or what action you want it to take.',
@@ -92,7 +109,7 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'context',
     title: '2. Background Context',
-    icon: '📚',
+    icon: IconBookOpen,
     summary: 'AI has no memory of your company, project, or domain unless you feed it context. Provide the environment and backstory.',
     badPrompt: 'Write a performance review for Alex.',
     badReason: 'Lacks Alex’s role, achievements, challenges, company culture, and seniority level.',
@@ -106,8 +123,8 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'audience',
     title: '3. Target Audience & Tone',
-    icon: '👥',
-    summary: 'Calibrate vocabulary, depth, and tone to the exact persona who will read or consume the output.',
+    icon: IconUser,
+    summary: 'Adjust vocabulary, depth, and tone for the exact person who will read or use the output.',
     badPrompt: 'Explain quantum computing.',
     badReason: 'The AI will default to an encyclopedic answer that may be too technical for a child or too basic for a physicist.',
     goodPrompt: 'Explain quantum superposition to a 10-year-old child who loves video games. Use analogies related to game power-ups and multiplayer servers.',
@@ -120,7 +137,7 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'specificity',
     title: '4. Specificity & Detail',
-    icon: '🔍',
+    icon: IconZap,
     summary: 'Vague prompts yield generic boilerplate. Give explicit parameters, quantities, and edge cases to consider.',
     badPrompt: 'Give me ideas to improve my landing page.',
     badReason: 'Returns standard advice like "make headline clear" without actionable depth.',
@@ -134,7 +151,7 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'format',
     title: '5. Output Format & Structure',
-    icon: '📐',
+    icon: IconTerminal,
     summary: 'Guide how the AI formats its response so it is immediately usable without manual reformatting.',
     badPrompt: 'Compare Python and Rust.',
     badReason: 'Produces a long block of text that is tiring to scan and contrast.',
@@ -148,7 +165,7 @@ const CORE_MODULES: Lesson[] = [
   {
     id: 'constraints',
     title: '6. Rules & Negative Constraints',
-    icon: '🛡️',
+    icon: IconShield,
     summary: 'Negative prompting and boundaries are often more powerful than positive instructions in preventing fluff.',
     badPrompt: 'Write a cold outreach message.',
     badReason: 'Results in cheesy, overly-hyped sales pitch that gets flagged as spam.',
@@ -190,7 +207,7 @@ Problem: Find the top 3 customers by lifetime spend who have not purchased in th
   },
   {
     title: 'System Role Framing',
-    tag: 'Persona Calibration',
+    tag: 'Role & Tone',
     desc: 'Give the AI an identity, seniority level, and perspective. Role framing primes the language model’s latent space for domain mastery.',
     example: `You are a Principal Security Engineer specializing in OWASP Top 10 vulnerabilities. 
 Audit the following Node.js Express endpoint for authorization bypass and parameter tampering. 
@@ -210,7 +227,7 @@ Present findings in CVSS severity order with concrete remediations.`,
 
 interface ResponsiblePrinciple {
   title: string
-  icon: string
+  icon: typeof IconLock
   subtitle: string
   description: string
   dos: string[]
@@ -220,7 +237,7 @@ interface ResponsiblePrinciple {
 const RESPONSIBLE_PRINCIPLES: ResponsiblePrinciple[] = [
   {
     title: 'Data Privacy & PII Protection',
-    icon: '🔒',
+    icon: IconLock,
     subtitle: 'Keep secrets, credentials, and personal records out of the prompt payload.',
     description: 'Cloud LLMs process prompts across remote inference infrastructure. Assume sensitive inputs can be logged or accessed in error dumps unless on enterprise zero-retention tiers.',
     dos: [
@@ -235,7 +252,7 @@ const RESPONSIBLE_PRINCIPLES: ResponsiblePrinciple[] = [
   },
   {
     title: 'Hallucination Defense & Fact Verification',
-    icon: '🎯',
+    icon: IconShield,
     subtitle: 'LLMs predict believable tokens, not ground truth. Always verify.',
     description: 'Generative models sound most confident right when they are completely wrong. Ground your prompts strictly in provided context and demand explicit source attribution.',
     dos: [
@@ -250,7 +267,7 @@ const RESPONSIBLE_PRINCIPLES: ResponsiblePrinciple[] = [
   },
   {
     title: 'Academic Integrity & Citing AI',
-    icon: '🎓',
+    icon: IconGraduationCap,
     subtitle: 'Be honest about tool usage and maintain genuine intellectual ownership.',
     description: 'Generative AI is a tutor and brainstorming partner, not a ghostwriter. Disclose AI assistance and adhere to university honor codes and research ethics.',
     dos: [
@@ -265,7 +282,7 @@ const RESPONSIBLE_PRINCIPLES: ResponsiblePrinciple[] = [
   },
   {
     title: 'Prompt Injection Defense & Security',
-    icon: '🛡️',
+    icon: IconTerminal,
     subtitle: 'Protect downstream apps from direct and indirect adversarial injection.',
     description: 'Untrusted user input embedded into prompts can contain instructions that override system rules. Proactively sanitize inputs and delimit instructions.',
     dos: [
@@ -288,16 +305,62 @@ const ETHICS_CHECKLIST = [
   'Will a human reviewer verify critical facts, code, and math calculations before publishing?',
 ]
 
-export function Learn() {
-  const [activeTab, setActiveTab] = useState<'fundamentals' | 'core' | 'mistakes' | 'advanced' | 'ethics'>('fundamentals')
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>({})
+const TABS = [
+  { id: 'fundamentals', label: 'Fundamentals', icon: IconGraduationCap },
+  { id: 'core', label: '6 Core Elements', icon: IconTerminal },
+  { id: 'mistakes', label: 'Common Mistakes', icon: IconAlertCircle },
+  { id: 'advanced', label: 'Advanced Patterns', icon: IconZap },
+  { id: 'ethics', label: 'Responsible AI & Ethics', icon: IconShield },
+] as const
 
-  // Automatically switch to ethics tab if navigated via /learn#responsible-ai
-  useEffect(() => {
-    if (window.location.hash === '#responsible-ai' || window.location.hash === '#ethics') {
-      setActiveTab('ethics')
+type TabId = (typeof TABS)[number]['id']
+
+export function Learn() {
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash
+      if (hash === '#responsible-ai' || hash === '#ethics') return 'ethics'
+      const stored = sessionStorage.getItem('pw_learn_tab') as TabId | null
+      if (stored && ['fundamentals', 'core', 'mistakes', 'advanced', 'ethics'].includes(stored)) {
+        return stored
+      }
     }
+    return 'fundamentals'
+  })
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [checkedItems, setCheckedItems] = useState<Record<number, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('pw_learn_ethics')
+        if (stored) return JSON.parse(stored)
+      } catch {
+        // ignore
+      }
+    }
+    return {}
+  })
+
+  // Persist tab and ethics checklist in session memory
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('pw_learn_tab', activeTab)
+      sessionStorage.setItem('pw_learn_ethics', JSON.stringify(checkedItems))
+    } catch {
+      // ignore
+    }
+  }, [activeTab, checkedItems])
+
+  // Automatically switch to ethics tab if navigated via /learn#responsible-ai or #ethics
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash
+      if (hash === '#responsible-ai' || hash === '#ethics') {
+        setActiveTab('ethics')
+      }
+    }
+    handleHash()
+    window.addEventListener('hashchange', handleHash)
+    return () => window.removeEventListener('hashchange', handleHash)
   }, [])
 
   const toggleCheck = (idx: number) => {
@@ -313,121 +376,128 @@ export function Learn() {
   }
 
   return (
-    <div id="responsible-ai" className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-      {/* Hero Header */}
+    <div id="responsible-ai" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+      {/* Editorial Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
         className="text-center mb-10"
       >
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-4">
-          📖 AI Literacy &amp; Prompting Masterclass
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
-          Master the Art of Prompting
+        <span className="inline-block font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 mb-2">
+          Curriculum &amp; Engineering Reference
+        </span>
+        <h1 className="font-serif-title text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">
+          Master the Art &amp; Science of Prompting
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
-          Understand how Generative AI processes instructions. Learn the anatomy of effective prompts, eliminate mistakes, and practice responsible AI.
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          Understand how language models interpret instructions. Study the structural anatomy of effective prompts, eliminate common failure modes, and apply rigorous responsible AI standards.
         </p>
 
-        {/* Tab switchers */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
-          <button
-            onClick={() => setActiveTab('fundamentals')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
-              activeTab === 'fundamentals'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-                : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-white/[0.08] shadow-xs'
-            }`}
-          >
-            🎓 Fundamentals
-          </button>
-          <button
-            onClick={() => setActiveTab('core')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
-              activeTab === 'core'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-                : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-white/[0.08] shadow-xs'
-            }`}
-          >
-            🧱 6 Core Elements
-          </button>
-          <button
-            onClick={() => setActiveTab('mistakes')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
-              activeTab === 'mistakes'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-                : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-white/[0.08] shadow-xs'
-            }`}
-          >
-            ❌ Common Mistakes
-          </button>
-          <button
-            onClick={() => setActiveTab('advanced')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
-              activeTab === 'advanced'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-                : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-white/[0.08] shadow-xs'
-            }`}
-          >
-            ⚡ Advanced Patterns
-          </button>
-          <button
-            onClick={() => setActiveTab('ethics')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer min-h-[44px] ${
-              activeTab === 'ethics'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
-                : 'bg-white dark:bg-white/[0.04] text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 border border-emerald-500/20 shadow-xs'
-            }`}
-          >
-            🛡️ Responsible AI &amp; Ethics
-          </button>
+        {/* Learning Navigation Tabs */}
+        <div className="inline-flex flex-wrap items-center justify-center p-1.5 rounded-2xl bg-slate-200/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 gap-1.5 mt-8 shadow-2xs max-w-full">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={[
+                  'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-mono transition-all duration-150 cursor-pointer min-h-[42px] select-none',
+                  isActive
+                    ? 'bg-blue-600 dark:bg-blue-600 text-white font-semibold shadow-sm border border-blue-700 dark:border-blue-500 ring-2 ring-blue-500/25'
+                    : 'bg-white dark:bg-slate-950/70 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs',
+                ].join(' ')}
+              >
+                <Icon size={15} className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'} />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
       </motion.div>
 
+
       <AnimatePresence mode="wait">
-        {/* Fundamentals Tab */}
+        {/* ── 1. Fundamentals Tab ────────────────────────────────────────── */}
         {activeTab === 'fundamentals' && (
           <motion.div
             key="fundamentals"
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
             className="space-y-8"
           >
-            {/* 4 Core Concepts */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {FUNDAMENTALS.map((f, i) => (
-                <div key={i} className="glass-card rounded-2xl p-6 shadow-sm">
-                  <div className="text-3xl mb-2">{f.icon}</div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">{f.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
+            {/* 4 Core Concepts Grid */}
+            <div>
+              <div className="mb-4">
+                <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider block mb-0.5">
+                  Foundations
+                </span>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  Core Concepts of Language Interaction
+                </h2>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {FUNDAMENTALS.map((f, i) => {
+                  const Icon = f.icon
+                  return (
+                    <div key={i} className="workbench-card p-5 sm:p-6 space-y-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <div className="w-8 h-8 rounded-lg bg-cobalt-500/10 dark:bg-cobalt-500/15 border border-cobalt-500/25 flex items-center justify-center text-cobalt-600 dark:text-cobalt-400">
+                          <Icon size={16} />
+                        </div>
+                        <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        {f.title}
+                      </h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed">
+                        {f.desc}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
-            {/* Anatomy of a Good Prompt */}
-            <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.08]">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🧬</span>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Anatomy of an Effective Prompt</h2>
+            {/* Anatomy of an Effective Prompt Section */}
+            <div className="workbench-card p-6 sm:p-8 space-y-5 shadow-2xs">
+              <div className="pb-4 border-b border-slate-200/80 dark:border-slate-800">
+                <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider block mb-0.5">
+                  Structural Framework
+                </span>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+                  The Structural Formula of an Effective Prompt
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  Reliable prompts follow an engineered formula rather than unstructured intuition:
+                </p>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">
-                A great prompt follows a formula rather than arbitrary luck:
-              </p>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {ANATOMY_FORMULA.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] flex flex-col justify-between"
+                    className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between space-y-2 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
                   >
-                    <div>
-                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/10 inline-block mb-1.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-7 h-7 rounded-lg bg-cobalt-500/10 dark:bg-cobalt-500/20 border border-cobalt-500/30 text-cobalt-700 dark:text-cobalt-300 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                        {item.letter}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
                         {item.name}
                       </span>
-                      <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{item.desc}</p>
                     </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {item.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -435,105 +505,176 @@ export function Learn() {
           </motion.div>
         )}
 
-        {/* Core Blocks Tab */}
+        {/* ── 2. Core Modules Tab (Prompt Anatomy in Practice) ────────────── */}
         {activeTab === 'core' && (
           <motion.div
             key="core"
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            className="space-y-8"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
           >
-            {CORE_MODULES.map((module) => (
-              <div
-                key={module.id}
-                className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.08] hover:border-indigo-500/30 transition-all duration-300"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-3xl">{module.icon}</span>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{module.title}</h2>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm">{module.summary}</p>
-                  </div>
-                </div>
+            <div className="mb-2">
+              <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider block mb-0.5">
+                Detailed Breakdown
+              </span>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                The 6 Structural Elements in Practice
+              </h2>
+            </div>
 
-                {/* Before / After Comparison */}
-                <div className="grid md:grid-cols-2 gap-4 mt-6">
-                  {/* Bad Prompt */}
-                  <div className="rounded-xl bg-red-50 dark:bg-red-500/[0.04] border border-red-200 dark:border-red-500/20 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">
-                        ❌ Weak Prompt
-                      </span>
+            {CORE_MODULES.map((module) => {
+              const Icon = module.icon
+              return (
+                <div
+                  key={module.id}
+                  className="workbench-card p-6 sm:p-7 space-y-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+                >
+                  {/* Module Header */}
+                  <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cobalt-500/10 dark:bg-cobalt-500/15 border border-cobalt-500/25 flex items-center justify-center text-cobalt-600 dark:text-cobalt-400 shrink-0 mt-0.5">
+                        <Icon size={16} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                          {module.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                          {module.summary}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-slate-800 dark:text-slate-200 text-sm font-mono bg-white dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] p-2.5 rounded-lg mb-2">
-                      "{module.badPrompt}"
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Why it fails: {module.badReason}</p>
                   </div>
 
-                  {/* Good Prompt */}
-                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-500/[0.04] border border-emerald-200 dark:border-emerald-500/20 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-                        ✅ PromptWise Standard
-                      </span>
-                      <button
-                        onClick={() => copyToClipboard(module.goodPrompt, module.id)}
-                        className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors cursor-pointer"
-                      >
-                        {copiedId === module.id ? 'Copied!' : 'Copy'}
-                      </button>
+                  {/* Before / After Comparison */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Weak Prompt (Ochre) */}
+                    <div className="rounded-xl bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/30 p-4 flex flex-col justify-between space-y-3">
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-ochre-500" />
+                          <span className="text-[11px] font-mono font-semibold text-ochre-700 dark:text-ochre-400 uppercase tracking-wider">
+                            Initial Weak Draft
+                          </span>
+                        </div>
+                        <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-950/80 border border-ochre-500/20 p-3 rounded-lg leading-relaxed">
+                          "{module.badPrompt}"
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-1.5 text-xs text-ochre-700 dark:text-ochre-300 pt-1">
+                        <IconAlertCircle size={13} className="shrink-0 mt-0.5" />
+                        <span>Why it fails: {module.badReason}</span>
+                      </div>
                     </div>
-                    <p className="text-slate-800 dark:text-slate-200 text-sm font-mono bg-white dark:bg-black/30 border border-slate-200 dark:border-white/[0.04] p-2.5 rounded-lg mb-2">
-                      "{module.goodPrompt}"
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Why it works: {module.goodReason}</p>
-                  </div>
-                </div>
 
-                {/* Pro Tips & Action */}
-                <div className="mt-5 pt-4 border-t border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-start gap-2">
-                    <span className="text-amber-500 dark:text-amber-400 text-sm">💡</span>
-                    <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                      {module.tips.map((tip, idx) => (
-                        <li key={idx}>• {tip}</li>
-                      ))}
-                    </ul>
+                    {/* Calibrated Standard (Sage) */}
+                    <div className="rounded-xl bg-sage-500/[0.04] dark:bg-sage-500/[0.06] border border-sage-500/35 p-4 flex flex-col justify-between space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+                            <span className="text-[11px] font-mono font-semibold text-sage-700 dark:text-sage-400 uppercase tracking-wider">
+                              PromptWise Improved Prompt
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(module.goodPrompt, module.id)}
+                            className="text-xs font-mono font-medium text-sage-700 dark:text-sage-300 hover:text-sage-800 dark:hover:text-sage-200 transition-colors cursor-pointer inline-flex items-center gap-1"
+                          >
+                            {copiedId === module.id ? (
+                              <>
+                                <IconCheck size={12} />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <IconCopy size={12} />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className="font-mono-code text-xs sm:text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950/80 border border-sage-500/25 p-3 rounded-lg leading-relaxed font-medium">
+                          "{module.goodPrompt}"
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-1.5 text-xs text-sage-700 dark:text-sage-300 pt-1">
+                        <IconCheckCircle size={13} className="shrink-0 mt-0.5" />
+                        <span>Why it works: {module.goodReason}</span>
+                      </div>
+                    </div>
                   </div>
-                  <Link
-                    to={`/improve?prompt=${encodeURIComponent(module.badPrompt)}`}
-                    className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    Test in Improve tool →
-                  </Link>
+
+                  {/* Pro Tips & Action */}
+                  <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-2 max-w-xl">
+                      <IconLightbulb size={16} className="text-ochre-500 shrink-0 mt-0.5" />
+                      <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                        {module.tips.map((tip, idx) => (
+                          <li key={idx}>• {tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Link
+                      to={`/improve?prompt=${encodeURIComponent(module.badPrompt)}`}
+                      className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 transition-colors"
+                    >
+                      <span>Test in Improve tool</span>
+                      <IconArrowRight size={13} />
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </motion.div>
         )}
 
-        {/* Common Mistakes Tab */}
+        {/* ── 3. Common Mistakes Tab ─────────────────────────────────────── */}
         {activeTab === 'mistakes' && (
           <motion.div
             key="mistakes"
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
             className="space-y-4"
           >
+            <div className="mb-2">
+              <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider block mb-0.5">
+                Failure Modes &amp; Remedies
+              </span>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                5 Common Mistakes &amp; Systematic Corrections
+              </h2>
+            </div>
+
             {COMMON_MISTAKES.map((m, i) => (
-              <div key={i} className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08]">
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-3">{m.title}</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/[0.05] border border-red-200 dark:border-red-500/20">
-                    <span className="text-xs text-red-600 dark:text-red-400 font-semibold block mb-1">❌ Typical Vague Mistake:</span>
-                    <p className="text-xs font-mono text-slate-800 dark:text-slate-200">{m.mistake}</p>
+              <div key={i} className="workbench-card p-5 sm:p-6 space-y-3 shadow-2xs">
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  {m.title}
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-3.5">
+                  {/* Mistake */}
+                  <div className="p-3.5 rounded-xl bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/25 space-y-1">
+                    <span className="text-[11px] font-mono font-semibold text-ochre-700 dark:text-ochre-400 uppercase tracking-wider block">
+                      Typical Vague Query
+                    </span>
+                    <p className="font-mono-code text-xs text-slate-800 dark:text-slate-200">
+                      {m.mistake}
+                    </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/[0.05] border border-emerald-200 dark:border-emerald-500/20">
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold block mb-1">✅ How to Correct It:</span>
-                    <p className="text-xs text-slate-800 dark:text-slate-200">{m.fix}</p>
+
+                  {/* Fix */}
+                  <div className="p-3.5 rounded-xl bg-sage-500/[0.04] dark:bg-sage-500/[0.06] border border-sage-500/30 space-y-1">
+                    <span className="text-[11px] font-mono font-semibold text-sage-700 dark:text-sage-400 uppercase tracking-wider block">
+                      Improved Prompt
+                    </span>
+                    <p className="font-mono-code text-xs text-slate-900 dark:text-slate-100">
+                      {m.fix}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -541,139 +682,182 @@ export function Learn() {
           </motion.div>
         )}
 
-        {/* Advanced Techniques Tab */}
+        {/* ── 4. Advanced Patterns Tab ───────────────────────────────────── */}
         {activeTab === 'advanced' && (
           <motion.div
             key="advanced"
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
-            className="grid md:grid-cols-2 gap-6"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-6"
           >
-            {ADVANCED_TECHNIQUES.map((tech, i) => (
-              <div
-                key={i}
-                className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08] flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{tech.title}</h3>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 font-medium">
-                      {tech.tag}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">{tech.desc}</p>
-                  <div className="relative">
-                    <pre className="text-xs font-mono text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-black/40 p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.06] whitespace-pre-wrap overflow-x-auto leading-relaxed">
-                      {tech.example}
-                    </pre>
-                  </div>
-                </div>
+            <div className="mb-2">
+              <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider block mb-0.5">
+                Advanced Paradigms
+              </span>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                Techniques for Complex Inference
+              </h2>
+            </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between">
-                  <button
-                    onClick={() => copyToClipboard(tech.example, `adv-${i}`)}
-                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                  >
-                    {copiedId === `adv-${i}` ? '✅ Copied to clipboard' : '📋 Copy template'}
-                  </button>
-                  <Link
-                    to={`/improve?prompt=${encodeURIComponent(tech.example)}`}
-                    className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
-                  >
-                    Try this →
-                  </Link>
+            <div className="grid md:grid-cols-2 gap-5">
+              {ADVANCED_TECHNIQUES.map((tech, i) => (
+                <div
+                  key={i}
+                  className="workbench-card p-5 sm:p-6 flex flex-col justify-between space-y-4 shadow-2xs"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-200/70 dark:border-slate-800/70">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        {tech.title}
+                      </h3>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cobalt-500/10 text-cobalt-700 dark:text-cobalt-400 border border-cobalt-500/20 font-medium">
+                        {tech.tag}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-3 leading-relaxed">
+                      {tech.desc}
+                    </p>
+                    <div className="relative">
+                      <pre className="font-mono-code text-xs text-slate-100 bg-slate-900 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-800 whitespace-pre-wrap overflow-x-auto leading-relaxed">
+                        {tech.example}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800/70 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(tech.example, `adv-${i}`)}
+                      className="text-xs font-mono font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      {copiedId === `adv-${i}` ? (
+                        <>
+                          <IconCheck size={13} className="text-sage-600" />
+                          <span>Copied template</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconCopy size={13} />
+                          <span>Copy template</span>
+                        </>
+                      )}
+                    </button>
+                    <Link
+                      to={`/improve?prompt=${encodeURIComponent(tech.example)}`}
+                      className="text-xs font-mono font-semibold text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 transition-colors inline-flex items-center gap-1"
+                    >
+                      <span>Try this</span>
+                      <IconArrowRight size={13} />
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </motion.div>
         )}
 
-        {/* Responsible AI & Ethics Tab */}
+        {/* ── 5. Responsible AI & Ethics Tab ─────────────────────────────── */}
         {activeTab === 'ethics' && (
           <motion.div
             key="ethics"
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -14 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
             className="space-y-8"
           >
-            {/* Intro Alert */}
-            <div className="rounded-2xl p-5 border border-emerald-500/20 bg-emerald-500/[0.04] flex flex-col sm:flex-row items-start gap-4">
-              <span className="text-3xl shrink-0">🌱</span>
+            {/* Intro Alert Banner */}
+            <div className="rounded-xl p-5 border border-sage-500/30 bg-sage-500/[0.04] dark:bg-sage-500/[0.06] flex items-start gap-3.5 shadow-2xs">
+              <IconShield size={22} className="text-sage-600 dark:text-sage-400 shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">
-                  Responsible Prompt Engineering &amp; Academic Ethics
+                  Responsible Prompt Engineering &amp; Academic Integrity
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Generative AI is a force multiplier for learning when used with integrity. Great prompt engineers protect personal data, verify facts before relying on them, and adhere strictly to university and professional codes of conduct.
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Generative AI is a force multiplier for learning when used with integrity. Responsible prompt engineers sanitize sensitive inputs, ground outputs against hallucinations, verify critical statements, and strictly adhere to institutional honor codes.
                 </p>
               </div>
             </div>
 
             {/* Principles Cards */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {RESPONSIBLE_PRINCIPLES.map((principle, i) => (
-                <div
-                  key={i}
-                  className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/[0.08] flex flex-col justify-between shadow-xs"
-                >
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl">{principle.icon}</span>
-                      <div>
-                        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
-                          {principle.title}
-                        </h3>
-                        <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                          {principle.subtitle}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm my-3 leading-relaxed">
-                      {principle.description}
-                    </p>
-
-                    <div className="space-y-3 mt-4">
-                      <div className="bg-emerald-500/[0.05] border border-emerald-500/20 rounded-xl p-3">
-                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block mb-1.5">
-                          ✅ Best Practices (Do This):
-                        </span>
-                        <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                          {principle.dos.map((d, idx) => (
-                            <li key={idx}>• {d}</li>
-                          ))}
-                        </ul>
+            <div className="grid md:grid-cols-2 gap-5">
+              {RESPONSIBLE_PRINCIPLES.map((principle, i) => {
+                const Icon = principle.icon
+                return (
+                  <div
+                    key={i}
+                    className="workbench-card p-6 space-y-4 shadow-2xs flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-cobalt-500/10 dark:bg-cobalt-500/15 border border-cobalt-500/25 flex items-center justify-center text-cobalt-600 dark:text-cobalt-400 shrink-0 mt-0.5">
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                            {principle.title}
+                          </h3>
+                          <p className="text-xs font-mono text-cobalt-600 dark:text-cobalt-400">
+                            {principle.subtitle}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="bg-red-500/[0.05] border border-red-500/20 rounded-xl p-3">
-                        <span className="text-xs font-bold text-red-600 dark:text-red-400 block mb-1.5">
-                          ❌ Pitfalls to Avoid (Don't Do):
-                        </span>
-                        <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                          {principle.donts.map((d, idx) => (
-                            <li key={idx}>• {d}</li>
-                          ))}
-                        </ul>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm my-3 leading-relaxed">
+                        {principle.description}
+                      </p>
+
+                      <div className="space-y-3 mt-4">
+                        {/* Best Practices */}
+                        <div className="bg-sage-500/[0.04] dark:bg-sage-500/[0.06] border border-sage-500/25 rounded-xl p-3.5 space-y-1.5">
+                          <span className="text-[11px] font-mono font-semibold text-sage-700 dark:text-sage-300 uppercase tracking-wider block">
+                            Best Practices (Recommended):
+                          </span>
+                          <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {principle.dos.map((d, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <IconCheckCircle size={13} className="text-sage-600 dark:text-sage-400 shrink-0 mt-0.5" />
+                                <span>{d}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Pitfalls */}
+                        <div className="bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/25 rounded-xl p-3.5 space-y-1.5">
+                          <span className="text-[11px] font-mono font-semibold text-ochre-700 dark:text-ochre-300 uppercase tracking-wider block">
+                            Pitfalls to Avoid:
+                          </span>
+                          <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                            {principle.donts.map((d, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <IconAlertCircle size={13} className="text-ochre-600 dark:text-ochre-400 shrink-0 mt-0.5" />
+                                <span>{d}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Interactive Ethics Pre-Flight Checklist */}
-            <div className="glass-card rounded-2xl p-6 sm:p-8 border border-emerald-500/30 bg-emerald-500/[0.02]">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div className="workbench-card p-6 sm:p-8 border-sage-500/30 bg-sage-500/[0.02] shadow-2xs space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/70 dark:border-slate-800/70">
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <span>📋 Pre-Flight Responsibility Checklist</span>
+                    <span>Pre-Flight Responsibility Checklist</span>
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Verify each safety and integrity checkpoint before deploying or sharing prompts.
                   </p>
                 </div>
-                <div className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 self-start sm:self-auto">
+                <div className="text-xs font-mono font-semibold px-3 py-1 rounded-full bg-sage-500/15 text-sage-700 dark:text-sage-300 border border-sage-500/30 self-start sm:self-auto">
                   {Object.values(checkedItems).filter(Boolean).length} / {ETHICS_CHECKLIST.length} Checked
                 </div>
               </div>
@@ -684,23 +868,24 @@ export function Learn() {
                   return (
                     <button
                       key={idx}
+                      type="button"
                       onClick={() => toggleCheck(idx)}
                       className={`w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition-all flex items-center gap-3 cursor-pointer ${
                         isChecked
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
-                          : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.06] text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/[0.12]'
+                          ? 'bg-sage-500/10 border-sage-500/30 text-slate-900 dark:text-slate-100'
+                          : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      <span
-                        className={`w-5 h-5 rounded-md flex items-center justify-center border text-xs font-bold shrink-0 transition-colors ${
+                      <div
+                        className={`w-5 h-5 rounded border flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                           isChecked
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : 'border-slate-300 dark:border-white/20 text-transparent'
+                            ? 'bg-sage-600 border-sage-600 text-white'
+                            : 'border-slate-300 dark:border-slate-600 text-transparent'
                         }`}
                       >
-                        ✓
-                      </span>
-                      <span>{item}</span>
+                        {isChecked && <IconCheck size={12} className="stroke-[3]" />}
+                      </div>
+                      <span className="leading-relaxed">{item}</span>
                     </button>
                   )
                 })}
@@ -710,9 +895,10 @@ export function Learn() {
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-5 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold text-center"
+                  className="p-3 rounded-xl bg-sage-500/15 border border-sage-500/30 text-sage-800 dark:text-sage-300 text-xs font-mono font-semibold text-center flex items-center justify-center gap-2"
                 >
-                  🎉 All integrity checks passed! Your prompt follows responsible AI guidelines.
+                  <IconCheckCircle size={15} className="text-sage-600 dark:text-sage-400 shrink-0" />
+                  <span>All integrity checks passed. Your prompt aligns with responsible AI standards.</span>
                 </motion.div>
               )}
             </div>

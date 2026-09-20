@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { IconSparkles } from '../ui/Icons'
 
 /**
  * Skeleton loader displayed when Gemini AI is analyzing the prompt
@@ -11,68 +12,65 @@ export function AnalyzeSkeleton({ prompt }: { prompt?: string }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.3 }}
-      className="w-full space-y-6"
+      transition={{ duration: 0.25 }}
+      className="w-full max-w-3xl mx-auto space-y-6"
     >
       {/* Top Status Badge & Heading */}
       <div className="text-center space-y-2 mb-2">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold tracking-wide">
-          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
-          <span>Analyzing prompt with Gemini AI…</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cobalt-500/10 border border-cobalt-500/25 text-cobalt-700 dark:text-cobalt-300 text-xs font-mono font-medium tracking-wide">
+          <IconSparkles size={14} className="animate-spin" />
+          <span>Checking your prompt with AI…</span>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
-          Checking intent and preparing adaptive follow-up questions
+        <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
+          Finding ways to make your prompt clearer and more specific
         </p>
       </div>
 
       {/* User prompt preview banner */}
       {prompt && (
-        <div className="px-5 py-3.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-xs">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1 font-medium uppercase tracking-wider">
-            Your prompt
-          </p>
-          <p className="text-slate-800 dark:text-slate-200 text-sm line-clamp-2">{prompt}</p>
+        <div className="px-5 py-3.5 rounded-xl bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/25 shadow-2xs">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-ochre-500" />
+            <p className="text-[11px] font-mono text-ochre-700 dark:text-ochre-400 font-medium uppercase tracking-wider">
+              Your Original Prompt
+            </p>
+          </div>
+          <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-2">{prompt}</p>
         </div>
       )}
 
       {/* Question Card Skeleton */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-white/[0.08] shadow-lg shadow-black/[0.02] dark:shadow-black/20 space-y-6">
-        {/* Step pill skeleton */}
-        <div className="flex items-center justify-between">
-          <div className="w-28 h-5 rounded-full bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
-          <div className="w-16 h-4 rounded-md bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
+      <div className="workbench-card p-6 sm:p-7 shadow-sm space-y-5">
+        {/* Step indicator placeholder */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="w-36 h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="w-20 h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
         </div>
 
-        {/* Question Title Skeleton (2 lines) */}
-        <div className="space-y-2.5">
-          <div className="w-3/4 h-7 rounded-lg bg-slate-200 dark:bg-white/[0.08] animate-pulse" />
-          <div className="w-1/2 h-7 rounded-lg bg-slate-200 dark:bg-white/[0.08] animate-pulse" />
+        {/* Question Title Skeleton */}
+        <div className="space-y-2">
+          <div className="w-4/5 h-6 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="w-2/3 h-6 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
         </div>
 
-        {/* Option Pills Skeletons (3 placeholder choices) */}
-        <div className="space-y-3 pt-2">
+        {/* Option Pills Skeletons */}
+        <div className="space-y-2.5 pt-2">
           {[1, 2, 3].map((idx) => (
             <div
               key={idx}
-              className="w-full h-14 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-slate-50/80 dark:bg-white/[0.02] px-4 flex items-center justify-between animate-pulse"
-              style={{ animationDelay: `${idx * 150}ms` }}
+              className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 px-4 flex items-center justify-between animate-pulse"
+              style={{ animationDelay: `${idx * 120}ms` }}
             >
-              <div className="flex items-center gap-3 flex-1">
-                <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-white/[0.12] shrink-0" />
-                <div
-                  className="h-4 rounded-md bg-slate-200 dark:bg-white/[0.08]"
-                  style={{ width: `${55 + (idx * 15)}%` }}
-                />
-              </div>
-              <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-white/[0.06]" />
+              <div className="h-4 rounded bg-slate-200 dark:bg-slate-800" style={{ width: `${45 + idx * 15}%` }} />
+              <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-700" />
             </div>
           ))}
         </div>
 
         {/* Bottom Buttons Skeleton */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-white/[0.06]">
-          <div className="w-20 h-10 rounded-xl bg-slate-200 dark:bg-white/[0.06] animate-pulse" />
-          <div className="w-32 h-10 rounded-xl bg-indigo-500/20 dark:bg-indigo-500/30 animate-pulse" />
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 dark:border-slate-800">
+          <div className="w-16 h-9 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="w-28 h-9 rounded-lg bg-cobalt-500/20 animate-pulse" />
         </div>
       </div>
     </motion.div>
@@ -81,8 +79,6 @@ export function AnalyzeSkeleton({ prompt }: { prompt?: string }) {
 
 /**
  * Skeleton loader displayed when Gemini AI is crafting the final enhanced prompt.
- * Perfectly mirrors the actual Results screen (Header badge, Actions bar, and
- * side-by-side Original Prompt vs Improved Prompt cards).
  */
 export function ImproveSkeleton({ originalPrompt }: { originalPrompt?: string }) {
   return (
@@ -91,97 +87,78 @@ export function ImproveSkeleton({ originalPrompt }: { originalPrompt?: string })
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.3 }}
-      className="w-full space-y-6"
+      transition={{ duration: 0.25 }}
+      className="w-full max-w-3xl mx-auto space-y-6"
     >
       {/* 1. Results Header Mirror */}
-      <div className="text-center mb-4 space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-sm font-semibold animate-pulse">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
-          <span>Generating improved prompt with Gemini AI…</span>
+      <div className="text-center mb-4 space-y-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sage-500/15 border border-sage-500/30 text-sage-700 dark:text-sage-300 text-xs font-mono font-medium animate-pulse">
+          <IconSparkles size={14} className="animate-spin text-sage-600 dark:text-sage-400 shrink-0" />
+          <span>Writing your improved prompt…</span>
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          Here's your improved prompt
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+          Refining Your Prompt
         </h2>
       </div>
 
-      {/* 2. Actions Bar Mirror */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-xs animate-pulse">
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <span className="w-4 h-4 rounded bg-slate-200 dark:bg-white/[0.1] inline-block" />
-          <span className="h-3 w-40 rounded bg-slate-200 dark:bg-white/[0.08] inline-block" />
-        </div>
-        <div className="w-28 h-8 rounded-lg bg-slate-200 dark:bg-white/[0.08]" />
-      </div>
-
-      {/* 3. Before / After Mirror (2-Column Grid matching BeforeAfter.tsx) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left Column: Original Prompt */}
-        <div className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50/60 dark:bg-red-500/[0.04] p-5 shadow-xs">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
-            <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">
-              Original Prompt
-            </span>
-          </div>
-          {originalPrompt ? (
-            <p className="text-slate-800 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
-              {originalPrompt}
-            </p>
-          ) : (
-            <div className="space-y-2 animate-pulse">
-              <div className="w-3/4 h-4 rounded bg-red-200/60 dark:bg-red-500/10" />
-              <div className="w-1/2 h-4 rounded bg-red-200/60 dark:bg-red-500/10" />
+      {/* 2. Before / After Mirror (2-Column Grid matching BeforeAfter.tsx) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Left Column: Original Prompt (Ochre) */}
+        <div className="rounded-xl border border-ochre-500/30 bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] p-4 sm:p-5 flex flex-col justify-between shadow-2xs">
+          <div>
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-ochre-500/20">
+              <span className="w-2 h-2 rounded-full bg-ochre-500 shrink-0" />
+              <span className="font-mono text-xs font-semibold text-ochre-700 dark:text-ochre-400 uppercase tracking-wider">
+                Your Original Prompt
+              </span>
             </div>
-          )}
+            {originalPrompt ? (
+              <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                {originalPrompt}
+              </p>
+            ) : (
+              <div className="space-y-2 animate-pulse">
+                <div className="w-3/4 h-3.5 rounded bg-ochre-500/10" />
+                <div className="w-1/2 h-3.5 rounded bg-ochre-500/10" />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Column: Improved Prompt (Shimmering Skeleton) */}
-        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/[0.05] p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between mb-4">
+        {/* Right Column: Improved Prompt Shimmer (Sage) */}
+        <div className="rounded-xl border border-sage-500/35 bg-sage-500/[0.04] dark:bg-sage-500/[0.06] p-4 sm:p-5 space-y-4 shadow-2xs">
+          <div className="flex items-center justify-between pb-2 border-b border-sage-500/20">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 shrink-0 animate-ping" />
-              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-sage-500 shrink-0 animate-pulse" />
+              <span className="font-mono text-xs font-semibold text-sage-700 dark:text-sage-400 uppercase tracking-wider">
                 Improved Prompt
               </span>
             </div>
-            {/* Copy Button Skeleton */}
-            <div className="w-16 h-7 rounded-lg bg-indigo-200/60 dark:bg-white/[0.08] animate-pulse" />
+            <div className="w-16 h-6 rounded bg-sage-500/15 animate-pulse" />
           </div>
 
-          {/* Realistic shimmering lines of improved prompt content */}
-          <div className="space-y-3 pt-1">
-            <div className="w-11/12 h-4 rounded-md bg-indigo-200/60 dark:bg-white/[0.08] animate-pulse" />
-            <div className="w-full h-4 rounded-md bg-indigo-200/50 dark:bg-white/[0.07] animate-pulse" />
-            <div className="w-4/5 h-4 rounded-md bg-indigo-200/60 dark:bg-white/[0.08] animate-pulse" />
-
-            <div className="pt-2 space-y-2">
-              <div className="w-2/3 h-3.5 rounded bg-indigo-300/60 dark:bg-indigo-400/20 animate-pulse" />
-              <div className="w-full h-3.5 rounded bg-indigo-200/40 dark:bg-white/[0.06] animate-pulse" />
-              <div className="w-5/6 h-3.5 rounded bg-indigo-200/40 dark:bg-white/[0.06] animate-pulse" />
-              <div className="w-3/4 h-3.5 rounded bg-indigo-200/40 dark:bg-white/[0.06] animate-pulse" />
-            </div>
-
-            <div className="pt-2 space-y-2">
-              <div className="w-1/2 h-3.5 rounded bg-indigo-300/60 dark:bg-indigo-400/20 animate-pulse" />
-              <div className="w-full h-3.5 rounded bg-indigo-200/40 dark:bg-white/[0.06] animate-pulse" />
-              <div className="w-4/5 h-3.5 rounded bg-indigo-200/40 dark:bg-white/[0.06] animate-pulse" />
-            </div>
+          {/* Realistic shimmering lines */}
+          <div className="space-y-2.5 pt-1">
+            <div className="w-11/12 h-3.5 rounded bg-sage-500/20 animate-pulse" />
+            <div className="w-full h-3.5 rounded bg-sage-500/15 animate-pulse" />
+            <div className="w-4/5 h-3.5 rounded bg-sage-500/20 animate-pulse" />
+            <div className="w-3/4 h-3.5 rounded bg-sage-500/15 animate-pulse" />
+            <div className="w-5/6 h-3.5 rounded bg-sage-500/15 animate-pulse" />
           </div>
         </div>
       </div>
 
-      {/* 4. Score Breakdown Cards Skeleton Mirror */}
-      <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/[0.08] shadow-sm animate-pulse space-y-3">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/[0.06]">
-          <div className="w-32 h-4 rounded bg-slate-200 dark:bg-white/[0.08]" />
-          <div className="w-24 h-4 rounded bg-emerald-500/20" />
+      {/* 3. Diagnostic Scoreboard Skeleton Mirror */}
+      <div className="workbench-card p-5 shadow-2xs animate-pulse space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+          <div className="w-36 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="w-24 h-4 rounded bg-sage-500/20" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04] space-y-2">
-              <div className="w-16 h-3 rounded bg-slate-200 dark:bg-white/[0.06]" />
-              <div className="w-10 h-5 rounded bg-indigo-500/20" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <div className="w-20 h-3 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="w-12 h-4 rounded bg-cobalt-500/20" />
             </div>
           ))}
         </div>
@@ -189,3 +166,4 @@ export function ImproveSkeleton({ originalPrompt }: { originalPrompt?: string })
     </motion.div>
   )
 }
+

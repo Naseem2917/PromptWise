@@ -125,10 +125,9 @@ export function ChatbotToolbar({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-medium shadow-lg shadow-indigo-600/20"
+            className="flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-cobalt-600 text-white text-xs font-mono font-medium shadow-md shadow-cobalt-600/20"
           >
             <div className="flex items-center gap-1.5 truncate">
-              <span>🚀</span>
               <span className="truncate">{toastMsg}</span>
             </div>
             <button
@@ -145,6 +144,7 @@ export function ChatbotToolbar({
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   )
 }

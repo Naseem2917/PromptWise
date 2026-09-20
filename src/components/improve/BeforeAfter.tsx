@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChatbotToolbar } from '../ui/ChatbotToolbar'
+import { IconCopy, IconCheck } from '../ui/Icons'
 
 interface BeforeAfterProps {
   originalPrompt: string
@@ -21,58 +22,87 @@ export function BeforeAfter({ originalPrompt, improvedPrompt }: BeforeAfterProps
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
-        {/* Before */}
-        <div className="rounded-2xl border border-red-200 dark:border-red-500/20 bg-red-50/60 dark:bg-red-500/[0.04] p-5 shadow-xs flex flex-col justify-between">
+        {/* Left: Initial Draft (Ochre Semantic Palette) */}
+        <div className="rounded-xl border border-ochre-500/30 bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] overflow-hidden flex flex-col justify-between shadow-2xs">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
-              <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">
-                Original Prompt
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-ochre-500/20 bg-ochre-500/[0.06] dark:bg-ochre-500/[0.08]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-ochre-500 shrink-0" />
+                <span className="font-mono text-xs font-semibold text-ochre-700 dark:text-ochre-400 uppercase tracking-wider">
+                  YOUR ORIGINAL PROMPT
+                </span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-ochre-500/15 text-ochre-700 dark:text-ochre-300 font-medium">
+                Not Yet Checked
               </span>
             </div>
-            <p className="text-slate-800 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
-              {originalPrompt}
-            </p>
+
+            {/* Prompt Content */}
+            <div className="p-4 sm:p-5">
+              <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap selection:bg-ochre-500/20">
+                {originalPrompt}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* After */}
-        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/[0.05] p-5 shadow-xs flex flex-col justify-between space-y-4">
+        {/* Right: Refined Specification (Sage Semantic Palette) */}
+        <div className="rounded-xl border border-sage-500/35 bg-sage-500/[0.04] dark:bg-sage-500/[0.06] overflow-hidden flex flex-col justify-between shadow-2xs">
           <div>
-            <div className="flex items-center justify-between mb-4">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-sage-500/20 bg-sage-500/[0.06] dark:bg-sage-500/[0.08]">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 shrink-0" />
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                  Improved Prompt
+                <span className="w-2 h-2 rounded-full bg-sage-500 shrink-0" />
+                <span className="font-mono text-xs font-semibold text-sage-700 dark:text-sage-400 uppercase tracking-wider">
+                  IMPROVED PROMPT
                 </span>
               </div>
               <button
+                type="button"
                 onClick={handleCopy}
-                className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 bg-white/80 dark:bg-white/[0.08] hover:bg-indigo-50 dark:hover:bg-white/[0.12] border border-indigo-200 dark:border-white/10 px-3 py-1.5 rounded-lg transition-colors cursor-pointer min-h-[36px] flex items-center gap-1 shadow-xs"
+                className="text-xs font-mono font-medium text-sage-700 dark:text-sage-300 bg-white/90 dark:bg-slate-900/90 hover:bg-sage-50 dark:hover:bg-sage-950/40 border border-sage-500/30 px-2.5 py-1 rounded-lg transition-colors cursor-pointer min-h-[32px] flex items-center gap-1.5 shadow-2xs"
                 aria-label="Copy improved prompt"
               >
-                {copied ? '✅ Copied!' : '📋 Copy'}
+                {copied ? (
+                  <>
+                    <IconCheck size={13} className="text-sage-600 dark:text-sage-400" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <IconCopy size={13} />
+                    <span>Copy Prompt</span>
+                  </>
+                )}
               </button>
             </div>
-            <p className="text-slate-900 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-line font-medium">
-              {improvedPrompt}
-            </p>
+
+            {/* Prompt Content */}
+            <div className="p-4 sm:p-5">
+              <p className="font-mono-code text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-wrap selection:bg-sage-500/20">
+                {improvedPrompt}
+              </p>
+            </div>
           </div>
 
           {/* Quick Chatbot Launch Toolbar */}
-          <ChatbotToolbar
-            prompt={improvedPrompt}
-            className="pt-4 border-t border-indigo-200/50 dark:border-white/[0.06]"
-          />
+          <div className="p-4 border-t border-sage-500/20 bg-sage-500/[0.02]">
+            <ChatbotToolbar
+              prompt={improvedPrompt}
+              compact
+            />
+          </div>
         </div>
       </motion.div>
     </div>
   )
 }
+

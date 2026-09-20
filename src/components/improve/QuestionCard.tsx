@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Question } from '../../types'
 import { Button } from '../ui/Button'
+import { IconArrowLeft, IconArrowRight, IconSparkles, IconEdit, IconCheck } from '../ui/Icons'
 
 interface QuestionCardProps {
   question: Question
@@ -13,6 +14,8 @@ interface QuestionCardProps {
   submitButtonText?: string
   initialValue?: string
   existingAnswer?: string | string[]
+  error?: string | null
+  onClearError?: () => void
 }
 
 export function QuestionCard({
@@ -25,6 +28,8 @@ export function QuestionCard({
   submitButtonText,
   initialValue,
   existingAnswer,
+  error,
+  onClearError,
 }: QuestionCardProps) {
   const [singleSelected, setSingleSelected] = useState<string>('')
   const [multiSelected, setMultiSelected] = useState<string[]>([])
@@ -32,6 +37,37 @@ export function QuestionCard({
   const [otherText, setOtherText] = useState('')
   const [toggled, setToggled] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  // Auto-dismiss after 5s or when user clicks outside / presses Escape
+  useEffect(() => {
+    if (!error) return
+
+    const timer = setTimeout(() => {
+      onClearError?.()
+    }, 5000)
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        onClearError?.()
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClearError?.()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [error, onClearError])
 
   // Restore existing answer when navigating back/forth between questions
   useEffect(() => {
@@ -135,60 +171,87 @@ export function QuestionCard({
   }
 
   const optionBase =
-    'text-left w-full px-5 py-3.5 rounded-xl border transition-all duration-200 cursor-pointer min-h-[44px] flex items-center'
+    'text-left w-full px-4 py-3.5 rounded-xl border transition-all duration-150 cursor-pointer min-h-[48px] flex items-center justify-between text-sm'
   const optionIdle =
-    'border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] text-slate-800 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-xs'
+    'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-800 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40 shadow-xs'
   const optionActive =
-    'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-500/30 font-semibold'
+    'border-cobalt-600 bg-cobalt-500/10 dark:bg-cobalt-500/15 text-cobalt-700 dark:text-cobalt-300 ring-1 ring-cobalt-500/30 font-medium shadow-xs'
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
+        ref={cardRef}
         key={question.id}
-        initial={{ opacity: 0, x: 30 }}
+        initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -30 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="w-full max-w-2xl mx-auto"
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
+        className="w-full max-w-2xl mx-auto workbench-card p-6 sm:p-7 shadow-sm"
       >
-        {/* Counter */}
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">
-          Question {questionNumber} of {totalQuestions}
-        </p>
+        {/* Header Metadata */}
+        <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+          <span className="font-mono text-xs font-semibold text-cobalt-600 dark:text-cobalt-400 uppercase tracking-wider">
+            Question {questionNumber} of {totalQuestions}
+          </span>
+          {(question.type === 'single_choice' || question.type === 'options') && (
+            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+              Choose one
+            </span>
+          )}
+          {question.type === 'multi_choice' && (
+            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+              Choose multiple
+            </span>
+          )}
+        </div>
 
-        {/* Question */}
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-7">{question.question}</h3>
+        {/* Question Title */}
+        <h3 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100 mb-6 leading-snug">
+          {question.question}
+        </h3>
 
         {/* ── Single Choice / Options ──────────────────────────────────── */}
         {(question.type === 'single_choice' || question.type === 'options') && (
-          <div className="grid gap-3">
-            {question.options?.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => setSingleSelected(opt)}
-                className={[optionBase, singleSelected === opt ? optionActive : optionIdle].join(' ')}
-              >
-                <span className="font-medium">{opt}</span>
-              </button>
-            ))}
+          <div className="grid gap-2.5">
+            {question.options?.map((opt) => {
+              const isSel = singleSelected === opt
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setSingleSelected(opt)}
+                  className={[optionBase, isSel ? optionActive : optionIdle].join(' ')}
+                >
+                  <span className="leading-relaxed">{opt}</span>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-3 transition-colors ${
+                    isSel ? 'border-cobalt-600 bg-cobalt-600' : 'border-slate-300 dark:border-slate-600'
+                  }`}>
+                    {isSel && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                </button>
+              )
+            })}
 
             {/* Custom "Other" option if not already provided by AI */}
             {!hasAiOther && (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-1">
                 <button
                   type="button"
                   onClick={() => setSingleSelected('__other__')}
                   className={[
                     optionBase,
-                    'flex items-center justify-between',
                     isOtherSingle ? optionActive : optionIdle,
                   ].join(' ')}
                 >
-                  <span className="font-medium flex items-center gap-2">
-                    <span>✏️</span>
-                    <span>Other (specify below)</span>
+                  <span className="flex items-center gap-2">
+                    <IconEdit size={15} className="text-slate-400" />
+                    <span>Other custom requirement…</span>
                   </span>
-                  {isOtherSingle && <span className="text-xs font-semibold text-indigo-500">Selected</span>}
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-3 transition-colors ${
+                    isOtherSingle ? 'border-cobalt-600 bg-cobalt-600' : 'border-slate-300 dark:border-slate-600'
+                  }`}>
+                    {isOtherSingle && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
                 </button>
 
                 {isOtherSingle && (
@@ -203,9 +266,9 @@ export function QuestionCard({
                       value={otherText}
                       onChange={(e) => setOtherText(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
-                      placeholder="Type your custom answer…"
+                      placeholder="Specify your exact requirement…"
                       autoFocus
-                      className="w-full bg-white dark:bg-white/[0.04] border border-indigo-500/40 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-indigo-500/20 shadow-xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-cobalt-500/50 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-cobalt-500/20 text-sm"
                     />
                   </motion.div>
                 )}
@@ -216,56 +279,55 @@ export function QuestionCard({
 
         {/* ── Multi Choice ────────────────────────────────────────────── */}
         {question.type === 'multi_choice' && (
-          <div className="grid gap-3">
+          <div className="grid gap-2.5">
             {question.options?.map((opt) => {
               const sel = multiSelected.includes(opt)
               return (
                 <button
                   key={opt}
+                  type="button"
                   onClick={() => toggleMulti(opt)}
                   className={[
                     optionBase,
-                    'flex items-center gap-3',
                     sel ? optionActive : optionIdle,
                   ].join(' ')}
                 >
-                  <span
+                  <span className="leading-relaxed">{opt}</span>
+                  <div
                     className={[
-                      'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-200',
-                      sel ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600',
+                      'w-4 h-4 rounded border flex items-center justify-center shrink-0 ml-3 transition-colors',
+                      sel ? 'border-cobalt-600 bg-cobalt-600 text-white' : 'border-slate-300 dark:border-slate-600',
                     ].join(' ')}
                   >
-                    {sel && <span className="text-white text-[10px] font-bold leading-none">✓</span>}
-                  </span>
-                  <span className="font-medium">{opt}</span>
+                    {sel && <IconCheck size={12} className="stroke-[2.5]" />}
+                  </div>
                 </button>
               )
             })}
 
             {/* Custom "Other" checkbox if not already provided by AI */}
             {!hasAiOther && (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-1">
                 <button
                   type="button"
                   onClick={() => toggleMulti('__other__')}
                   className={[
                     optionBase,
-                    'flex items-center gap-3',
                     isOtherMulti ? optionActive : optionIdle,
                   ].join(' ')}
                 >
-                  <span
+                  <span className="flex items-center gap-2">
+                    <IconEdit size={15} className="text-slate-400" />
+                    <span>Other custom option…</span>
+                  </span>
+                  <div
                     className={[
-                      'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-200',
-                      isOtherMulti ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 dark:border-slate-600',
+                      'w-4 h-4 rounded border flex items-center justify-center shrink-0 ml-3 transition-colors',
+                      isOtherMulti ? 'border-cobalt-600 bg-cobalt-600 text-white' : 'border-slate-300 dark:border-slate-600',
                     ].join(' ')}
                   >
-                    {isOtherMulti && <span className="text-white text-[10px] font-bold leading-none">✓</span>}
-                  </span>
-                  <span className="font-medium flex items-center gap-2">
-                    <span>✏️</span>
-                    <span>Other (specify below)</span>
-                  </span>
+                    {isOtherMulti && <IconCheck size={12} className="stroke-[2.5]" />}
+                  </div>
                 </button>
 
                 {isOtherMulti && (
@@ -280,9 +342,9 @@ export function QuestionCard({
                       value={otherText}
                       onChange={(e) => setOtherText(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
-                      placeholder="Type your custom answer…"
+                      placeholder="Specify your custom answer…"
                       autoFocus
-                      className="w-full bg-white dark:bg-white/[0.04] border border-indigo-500/40 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-indigo-500/20 shadow-xs"
+                      className="w-full bg-white dark:bg-slate-900 border border-cobalt-500/50 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none ring-2 ring-cobalt-500/20 text-sm"
                     />
                   </motion.div>
                 )}
@@ -290,100 +352,157 @@ export function QuestionCard({
             )}
 
             {multiSelected.length > 0 && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{multiSelected.length} selected</p>
+              <p className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-1">{multiSelected.length} choice{multiSelected.length > 1 ? 's' : ''} selected</p>
             )}
           </div>
         )}
 
+        {/* Options Error Tooltip (for single/multi choice or toggle) */}
+        {question.type !== 'text' && (
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                role="alert"
+                initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="mt-3 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/90 rounded-xl px-3.5 py-2.5 shadow-md flex items-start gap-2.5 text-xs text-slate-800 dark:text-slate-100"
+              >
+                <div className="w-4 h-4 rounded bg-amber-500 text-white flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 shadow-xs">
+                  !
+                </div>
+                <span className="font-sans leading-snug">
+                  {error}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
         {/* ── Text ────────────────────────────────────────────────────── */}
         {question.type === 'text' && (
-          <input
-            ref={inputRef}
-            type="text"
-            value={textValue}
-            onChange={(e) => setTextValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
-            placeholder="Type your answer…"
-            autoFocus
-            className="w-full bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.1] rounded-xl px-4 py-3.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 min-h-[44px] shadow-xs"
-          />
+          <div className="space-y-2">
+            <div className="relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={textValue}
+                onChange={(e) => {
+                  setTextValue(e.target.value)
+                  if (error) onClearError?.()
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && canProceed && handleSubmit()}
+                placeholder="Type your response…"
+                autoFocus
+                className={`w-full bg-white dark:bg-slate-900 border rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 outline-none transition-all duration-150 min-h-[48px] text-sm ${
+                  error
+                    ? 'border-amber-500 dark:border-amber-500 focus:border-amber-500 ring-2 ring-amber-500/20'
+                    : 'border-slate-200 dark:border-slate-800 focus:border-cobalt-600 focus:ring-2 focus:ring-cobalt-500/20'
+                }`}
+              />
+
+              {/* Anchored Floating Tooltip directly under the text box */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    role="alert"
+                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute left-2 sm:left-4 top-[calc(100%+6px)] z-30 max-w-sm sm:max-w-md bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/90 rounded-xl px-3.5 py-2.5 shadow-xl flex items-start gap-2.5 text-xs text-slate-800 dark:text-slate-100"
+                  >
+                    {/* Arrow indicator pointing up at the text input */}
+                    <div className="absolute -top-1.5 left-5 w-3 h-3 bg-white dark:bg-slate-900 border-t border-l border-slate-200/90 dark:border-slate-700/90 rotate-45 transform" />
+
+                    {/* Alert Icon Badge */}
+                    <div className="relative z-10 w-4 h-4 rounded bg-amber-500 text-white flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 shadow-xs">
+                      !
+                    </div>
+
+                    {/* Error Message Text */}
+                    <span className="relative z-10 font-sans leading-snug">
+                      {error}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500">Press Enter to continue</p>
+          </div>
         )}
 
         {/* ── Toggle ──────────────────────────────────────────────────── */}
         {question.type === 'toggle' && (
-          <button
-            onClick={() => setToggled(!toggled)}
-            className="flex items-center gap-4 cursor-pointer min-h-[44px]"
-            aria-pressed={toggled}
-          >
-            <div
-              className={[
-                'relative w-14 h-7 rounded-full transition-colors duration-300',
-                toggled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-white/[0.1]',
-              ].join(' ')}
+          <div className="py-2">
+            <button
+              type="button"
+              onClick={() => setToggled(!toggled)}
+              className="flex items-center gap-4 cursor-pointer min-h-[48px] select-none"
+              aria-pressed={toggled}
             >
-              <motion.div
-                className="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-sm"
-                animate={{ x: toggled ? 28 : 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            </div>
-            <span className="text-slate-800 dark:text-slate-300 font-medium">{toggled ? 'Yes' : 'No'}</span>
-          </button>
+              <div
+                className={[
+                  'relative w-13 h-7 rounded-full transition-colors duration-200',
+                  toggled ? 'bg-cobalt-600' : 'bg-slate-300 dark:bg-slate-700',
+                ].join(' ')}
+              >
+                <motion.div
+                  className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-xs"
+                  animate={{ x: toggled ? 24 : 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              </div>
+              <span className="text-slate-800 dark:text-slate-200 font-medium text-sm">
+                {toggled ? 'Yes — Include in prompt' : 'No — Leave out'}
+              </span>
+            </button>
+          </div>
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-between gap-3 mt-8">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3 mt-8 pt-5 border-t border-slate-200/80 dark:border-slate-800">
+          <div className="flex items-center gap-2">
             {onBack && (
               <Button
                 variant="secondary"
                 onClick={onBack}
-                className="group inline-flex items-center gap-2 font-medium"
+                className="group/btn inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer"
               >
-                <svg
-                  className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                </svg>
+                <IconArrowLeft size={14} className="transition-transform duration-200 group-hover/btn:-translate-x-1" />
                 <span>Back</span>
               </Button>
             )}
             <Button
               onClick={handleSubmit}
               disabled={!canProceed}
-              className="group inline-flex items-center gap-2"
+              className="group/btn inline-flex items-center gap-1.5 text-xs cursor-pointer"
             >
               {submitButtonText ? (
-                <span>{submitButtonText}</span>
+                <>
+                  <span>{submitButtonText.replace(/→|←/g, '').trim()}</span>
+                  <IconArrowRight size={14} className="transition-transform duration-200 group-hover/btn:translate-x-1" />
+                </>
               ) : isLast ? (
-                <span>✨ Generate Improved Prompt</span>
+                <>
+                  <IconSparkles size={14} />
+                  <span>Improve Prompt</span>
+                </>
               ) : (
                 <>
-                  <span>Next</span>
-                  <svg
-                    className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
+                  <span>Next Question</span>
+                  <IconArrowRight size={14} className="transition-transform duration-200 group-hover/btn:translate-x-1" />
                 </>
               )}
             </Button>
           </div>
           {!hideSkip && (
-            <Button variant="ghost" onClick={() => onAnswer(question.id, '')}>
+            <Button
+              variant="ghost"
+              onClick={() => onAnswer(question.id, '')}
+              className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 font-mono"
+            >
               Skip
             </Button>
           )}
@@ -392,3 +511,4 @@ export function QuestionCard({
     </AnimatePresence>
   )
 }
+

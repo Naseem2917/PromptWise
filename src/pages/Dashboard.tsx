@@ -7,19 +7,43 @@ import type { PromptRecord } from '../lib/db'
 import { Spinner } from '../components/ui/Spinner'
 import { UserAvatar } from '../components/ui/UserAvatar'
 import { ChatbotToolbar } from '../components/ui/ChatbotToolbar'
-import { cx } from '../lib/theme'
+import {
+  IconBookmark,
+  IconBookmarkFilled,
+  IconTrash,
+  IconCopy,
+  IconCheck,
+  IconX,
+  IconSparkles,
+  IconHistory,
+  IconArrowRight,
+  IconLock,
+  IconLogIn,
+} from '../components/ui/Icons'
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// ── Stat Metric ───────────────────────────────────────────────────────────────
 
-function StatCard({ value, label, icon }: { value: number | string; label: string; icon: string }) {
+function StatMetric({
+  value,
+  label,
+  sublabel,
+}: {
+  value: number | string
+  label: string
+  sublabel?: string
+}) {
   return (
-    <div className="glass-card rounded-2xl p-6 flex items-center gap-4 shadow-sm">
-      <div className="w-12 h-12 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-2xl shrink-0">
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{value}</p>
-        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">{label}</p>
+    <div className="workbench-card p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
+      <p className="text-[11px] font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold mb-1">
+        {label}
+      </p>
+      <div className="flex items-baseline gap-1.5 mt-1">
+        <p className="text-2xl sm:text-3xl font-mono font-bold text-slate-900 dark:text-slate-100">
+          {value}
+        </p>
+        {sublabel && (
+          <span className="text-xs font-mono text-slate-400 dark:text-slate-500">{sublabel}</span>
+        )}
       </div>
     </div>
   )
@@ -44,7 +68,9 @@ function PromptDetailModal({
 
   const date = prompt.createdAt
     ? new Date((prompt.createdAt as { seconds: number }).seconds * 1000).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'long', year: 'numeric',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       })
     : 'Just now'
 
@@ -63,7 +89,9 @@ function PromptDetailModal({
 
   // Close on Escape key
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
@@ -73,39 +101,46 @@ function PromptDetailModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 16 }}
+        initial={{ scale: 0.96, opacity: 0, y: 12 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 16 }}
+        exit={{ scale: 0.96, opacity: 0, y: 12 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#131B2E] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-2xl"
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500 dark:text-slate-400">{date}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/15 font-medium">
-              {prompt.scoreBefore} → {prompt.scoreAfter}
+            <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{date}</span>
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-500/10 text-cobalt-700 dark:text-cobalt-300 border border-blue-500/25 font-semibold">
+              Score {prompt.scoreBefore} → {prompt.scoreAfter}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
+              type="button"
               onClick={handleToggle}
               disabled={saving}
-              title={prompt.saved ? 'Remove bookmark' : 'Bookmark'}
-              className="text-lg cursor-pointer disabled:opacity-50 transition-transform hover:scale-110"
+              title={prompt.saved ? 'Remove bookmark' : 'Bookmark prompt'}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
             >
-              {prompt.saved ? '🔖' : '📌'}
+              {prompt.saved ? (
+                <IconBookmarkFilled size={18} className="text-ochre-600 dark:text-ochre-400" />
+              ) : (
+                <IconBookmark size={18} />
+              )}
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors cursor-pointer text-lg"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close modal"
             >
-              ✕
+              <IconX size={18} />
             </button>
           </div>
         </div>
@@ -113,29 +148,46 @@ function PromptDetailModal({
         {/* Modal Body */}
         <div className="p-6 space-y-5">
           {/* Original Prompt */}
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              Original Prompt
-            </p>
-            <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed break-words">
+          <div className="rounded-xl bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/30 p-4 space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-ochre-500 shrink-0" />
+              <p className="text-[11px] font-mono font-semibold uppercase tracking-wider text-ochre-700 dark:text-ochre-400">
+                Original Prompt
+              </p>
+            </div>
+            <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed break-words">
               {prompt.originalPrompt}
             </p>
           </div>
 
           {/* Improved Prompt */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Improved Prompt
-              </p>
+          <div className="rounded-xl bg-sage-500/[0.04] dark:bg-sage-500/[0.06] border border-sage-500/35 p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sage-500 shrink-0" />
+                <p className="text-[11px] font-mono font-semibold uppercase tracking-wider text-sage-700 dark:text-sage-400">
+                  Improved Prompt
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/20 transition-colors cursor-pointer font-medium"
+                className="inline-flex items-center gap-1.5 text-xs font-mono font-medium px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-2xs"
               >
-                {copied ? '✅ Copied!' : '📋 Copy'}
+                {copied ? (
+                  <>
+                    <IconCheck size={12} className="text-sage-600 dark:text-sage-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <IconCopy size={12} />
+                    <span>Copy Prompt</span>
+                  </>
+                )}
               </button>
             </div>
-            <pre className="text-slate-700 dark:text-slate-300 text-xs font-mono bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] p-4 rounded-xl whitespace-pre-wrap break-words leading-relaxed">
+            <pre className="font-mono-code text-xs sm:text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950/80 p-3.5 rounded-lg border border-sage-500/25 whitespace-pre-wrap break-words leading-relaxed">
               {prompt.improvedPrompt}
             </pre>
           </div>
@@ -144,7 +196,7 @@ function PromptDetailModal({
           <ChatbotToolbar prompt={prompt.improvedPrompt} className="pt-2" />
 
           {/* Modal Footer with Delete */}
-          <div className="pt-4 border-t border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <button
               type="button"
               onClick={async () => {
@@ -153,15 +205,15 @@ function PromptDetailModal({
                 setDeleting(false)
               }}
               disabled={deleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200 dark:border-red-500/20 transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-ochre-700 dark:text-ochre-400 hover:bg-ochre-500/10 border border-ochre-500/25 transition-colors cursor-pointer disabled:opacity-50 min-h-[34px]"
             >
-              <span>🗑️</span>
-              <span>{deleting ? 'Deleting...' : 'Delete Prompt'}</span>
+              <IconTrash size={14} />
+              <span>{deleting ? 'Deleting…' : 'Delete Prompt'}</span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
+              className="px-4 py-1.5 rounded-lg text-xs font-mono font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer min-h-[34px]"
             >
               Close
             </button>
@@ -172,7 +224,7 @@ function PromptDetailModal({
   )
 }
 
-// ── Prompt Card ───────────────────────────────────────────────────────────────
+// ── Prompt Record Card ────────────────────────────────────────────────────────
 
 function PromptCard({
   prompt,
@@ -188,7 +240,7 @@ function PromptCard({
   const [saving, setSaving] = useState(false)
 
   const handleToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation() // don't open modal when clicking bookmark
+    e.stopPropagation()
     setSaving(true)
     await toggleSavePrompt(prompt.id, !prompt.saved)
     onToggleSave(prompt.id, !prompt.saved)
@@ -197,57 +249,70 @@ function PromptCard({
 
   const date = prompt.createdAt
     ? new Date((prompt.createdAt as { seconds: number }).seconds * 1000).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'short', year: 'numeric',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
       })
     : 'Just now'
 
   return (
     <div
-      className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:border-indigo-500/30 transition-all shadow-sm cursor-pointer hover:shadow-md"
+      className="workbench-card p-5 sm:p-6 flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-2xs cursor-pointer group"
       onClick={onClick}
     >
       <div>
-        <div className="flex items-start justify-between gap-3 mb-3">
+        {/* Top bar: date, score, actions */}
+        <div className="flex items-start justify-between gap-3 mb-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 dark:text-slate-400">{date}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/15 font-medium">
-              {prompt.scoreBefore} → {prompt.scoreAfter}
+            <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{date}</span>
+            <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-500/10 text-cobalt-700 dark:text-cobalt-300 border border-blue-500/25 font-semibold">
+              Score {prompt.scoreBefore} → {prompt.scoreAfter}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={handleToggle}
               disabled={saving}
               title={prompt.saved ? 'Remove bookmark' : 'Bookmark'}
-              className="text-base cursor-pointer disabled:opacity-50 transition-transform duration-200 hover:scale-110 shrink-0 p-1"
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
             >
-              {prompt.saved ? '🔖' : '📌'}
+              {prompt.saved ? (
+                <IconBookmarkFilled size={16} className="text-ochre-600 dark:text-ochre-400" />
+              ) : (
+                <IconBookmark size={16} />
+              )}
             </button>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete(prompt.id)
               }}
               title="Delete prompt"
-              className="text-sm cursor-pointer text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors shrink-0 p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+              className="p-1.5 rounded-md text-slate-400 hover:text-ochre-600 dark:hover:text-ochre-400 transition-colors cursor-pointer"
             >
-              🗑️
+              <IconTrash size={16} />
             </button>
           </div>
         </div>
-        {/* Original prompt — 2 line clamp */}
-        <p className="text-slate-800 dark:text-slate-200 text-sm font-medium line-clamp-2 break-words mb-2">
-          {prompt.originalPrompt}
+
+        {/* Draft text preview */}
+        <p className="font-mono-code text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-medium line-clamp-2 break-words mb-2.5">
+          "{prompt.originalPrompt}"
         </p>
-        {/* Improved prompt preview — 3 line clamp */}
-        <div className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] p-3 rounded-xl">
-          <p className="text-slate-600 dark:text-slate-300 text-xs line-clamp-3 break-words font-mono leading-relaxed">
+
+        {/* Improved preview */}
+        <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70 p-3 rounded-xl">
+          <p className="font-mono-code text-xs text-slate-600 dark:text-slate-400 line-clamp-2 break-words leading-relaxed">
             {prompt.improvedPrompt}
           </p>
         </div>
       </div>
-      {/* Click hint */}
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-right">Click to expand →</p>
+
+      <div className="pt-3 flex items-center justify-end text-[11px] font-mono text-cobalt-600 dark:text-cobalt-400 group-hover:underline">
+        <span>View details →</span>
+      </div>
     </div>
   )
 }
@@ -263,7 +328,11 @@ export function Dashboard() {
   const [expandedPrompt, setExpandedPrompt] = useState<PromptRecord | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
     Promise.all([
       getUserPrompts(user.uid),
       getPracticeCount(user.uid),
@@ -279,32 +348,57 @@ export function Dashboard() {
   }, [user])
 
   const handleToggleSave = useCallback((id: string, saved: boolean) => {
+    toggleSavePrompt(id, saved).catch(console.error)
     setPrompts((prev) => prev.map((p) => (p.id === id ? { ...p, saved } : p)))
-    // Also update modal if open
-    setExpandedPrompt((prev) => prev?.id === id ? { ...prev, saved } : prev)
+    setExpandedPrompt((prev) => (prev?.id === id ? { ...prev, saved } : prev))
   }, [])
 
-  const handleDeletePrompt = useCallback(async (id: string) => {
-    if (!user) return
-    const confirmed = window.confirm('Are you sure you want to delete this prompt from your history?')
-    if (!confirmed) return
-    try {
-      await deletePrompt(id, user.uid)
-      setPrompts((prev) => prev.filter((p) => p.id !== id))
-      setExpandedPrompt((prev) => (prev?.id === id ? null : prev))
-    } catch (err) {
-      console.error('Failed to delete prompt:', err)
-      alert('Failed to delete prompt. Please try again.')
-    }
-  }, [user])
+  const handleDeletePrompt = useCallback(
+    async (id: string) => {
+      if (!user) return
+      const confirmed = window.confirm(
+        'Are you sure you want to delete this prompt from your history?',
+      )
+      if (!confirmed) return
+      try {
+        await deletePrompt(id, user.uid)
+        setPrompts((prev) => prev.filter((p) => p.id !== id))
+        setExpandedPrompt((prev) => (prev?.id === id ? null : prev))
+      } catch (err) {
+        console.error('Failed to delete prompt:', err)
+        alert('Failed to delete prompt. Please try again.')
+      }
+    },
+    [user],
+  )
 
   if (!user) {
     return (
-      <div className="flex-1 flex items-center justify-center pt-24">
-        <div className="text-center">
-          <p className="text-4xl mb-4">🔐</p>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-200 mb-2">Sign in to view your Dashboard</h2>
-          <p className="text-slate-600 dark:text-slate-400">Your prompt history and stats will appear here.</p>
+      <div className="flex-1 max-w-xl mx-auto px-4 sm:px-6 py-20 text-center space-y-4 w-full">
+        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-cobalt-600 dark:text-cobalt-400 mx-auto">
+          <IconLock size={22} />
+        </div>
+        <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+          Sign In to Access Your Workspace
+        </h2>
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-sm mx-auto">
+          Your improved prompt history, saved prompts, and quiz scores are securely synchronized when signed in.
+        </p>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            to="/signin"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs sm:text-sm font-semibold transition-colors shadow-xs inline-flex items-center justify-center gap-2 min-h-[42px]"
+          >
+            <IconLogIn size={15} />
+            <span>Sign In to PromptWise</span>
+          </Link>
+          <Link
+            to="/improve"
+            className="group/btn w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-mono text-xs sm:text-sm font-semibold transition-colors shadow-2xs inline-flex items-center justify-center gap-1.5 min-h-[42px]"
+          >
+            <span>Try Prompt Improvement</span>
+            <IconArrowRight size={13} className="transition-transform duration-200 group-hover/btn:translate-x-1" />
+          </Link>
         </div>
       </div>
     )
@@ -313,103 +407,105 @@ export function Dashboard() {
   const saved = prompts.filter((p) => p.saved)
 
   return (
-    <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-      <div>
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-10"
-        >
+    <div className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-slate-800"
+      >
+        <div className="flex items-center gap-4">
           <UserAvatar
             photoURL={user.photoURL}
             name={user.displayName}
             email={user.email}
-            sizeClassName="w-14 h-14"
-            textClassName="text-lg font-bold"
-            roundedClassName="rounded-2xl"
-            className="border-2 border-indigo-500/30 shadow-md shadow-indigo-500/10"
+            sizeClassName="w-12 h-12"
+            textClassName="text-base font-bold font-mono"
+            roundedClassName="rounded-xl"
+            className="border border-slate-200 dark:border-slate-800 shadow-2xs"
           />
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">
-              Welcome back, {user.displayName?.split(' ')[0]}! 👋
+            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 block mb-0.5">
+              Personal Workspace
+            </span>
+            <h1 className="font-serif-title text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+              {user.displayName?.split(' ')[0] || 'User'}'s Dashboard
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">Here's your PromptWise progress</p>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10"
+        <Link
+          to="/improve"
+          className="self-start sm:self-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-semibold transition-colors shadow-xs inline-flex items-center gap-1.5 min-h-[36px]"
         >
-          <StatCard value={prompts.length} label="Prompts Improved" icon="✨" />
-          <StatCard value={practiceCount} label="Practice Completed" icon="🏋️" />
-          <StatCard value={quizScore !== null ? `${quizScore}%` : '—'} label="Quiz Score" icon="🧠" />
-          <StatCard value={saved.length} label="Saved Prompts" icon="🔖" />
-        </motion.div>
+          <IconSparkles size={14} />
+          <span>Improve a Prompt</span>
+        </Link>
+      </motion.div>
 
-        {loading && (
-          <div className="flex justify-center py-16">
-            <Spinner size="lg" />
+      {/* Stats Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-10"
+      >
+        <StatMetric value={prompts.length} label="Total Improved" sublabel="prompts" />
+        <StatMetric value={practiceCount} label="Exercises" sublabel="finished" />
+        <StatMetric
+          value={quizScore !== null ? `${quizScore}%` : '—'}
+          label="Quiz Score"
+          sublabel="latest"
+        />
+        <StatMetric value={saved.length} label="Saved" sublabel="prompts" />
+      </motion.div>
+
+      {loading && (
+        <div className="flex justify-center py-16">
+          <Spinner size="lg" />
+        </div>
+      )}
+
+      {!loading && prompts.length === 0 && (
+        <div className="workbench-card text-center py-16 px-4 shadow-2xs space-y-3 max-w-lg mx-auto">
+          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+            <IconHistory size={20} />
           </div>
-        )}
-
-        {!loading && prompts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">📝</p>
-            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">No prompts yet</h3>
-            <p className="text-slate-500 mb-6">Start improving your first prompt!</p>
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            No saved prompts yet
+          </h3>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-sm mx-auto leading-relaxed">
+            Improve your first prompt to see your before-and-after history, score improvements, and export options here.
+          </p>
+          <div className="pt-2">
             <Link
               to="/improve"
-              className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-semibold transition-colors shadow-xs"
             >
-              ✨ Improve a Prompt
+              <IconSparkles size={13} />
+              <span>Improve a Prompt</span>
             </Link>
           </div>
-        )}
+        </div>
+      )}
 
-        {!loading && prompts.length > 0 && (
-          <>
-            {/* Saved Prompts */}
-            {saved.length > 0 && (
-              <motion.section
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mb-10"
-              >
-                <h2 className={`${cx.sectionHeading} mb-4`}>🔖 Saved Prompts</h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {saved.slice(0, 4).map((p) => (
-                    <PromptCard
-                      key={p.id}
-                      prompt={p}
-                      onToggleSave={handleToggleSave}
-                      onDelete={handleDeletePrompt}
-                      onClick={() => setExpandedPrompt(p)}
-                    />
-                  ))}
-                </div>
-              </motion.section>
-            )}
-
-            {/* Recent Prompts */}
+      {!loading && prompts.length > 0 && (
+        <div className="space-y-10">
+          {/* Saved Prompts */}
+          {saved.length > 0 && (
             <motion.section
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.15 }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={cx.sectionHeading}>🕐 Recent Prompts</h2>
-                <Link to="/history" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors">
-                  View all →
-                </Link>
+              <div className="flex items-center gap-2 mb-4">
+                <IconBookmarkFilled size={16} className="text-ochre-600 dark:text-ochre-400" />
+                <h2 className="font-serif-title text-xl font-bold text-slate-900 dark:text-slate-100">
+                  Saved Prompts ({saved.length})
+                </h2>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
-                {prompts.slice(0, 6).map((p) => (
+                {saved.slice(0, 4).map((p) => (
                   <PromptCard
                     key={p.id}
                     prompt={p}
@@ -420,9 +516,43 @@ export function Dashboard() {
                 ))}
               </div>
             </motion.section>
-          </>
-        )}
-      </div>
+          )}
+
+          {/* Recent Prompts */}
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <IconHistory size={16} className="text-cobalt-600 dark:text-cobalt-400" />
+                <h2 className="font-serif-title text-xl font-bold text-slate-900 dark:text-slate-100">
+                  Recent Prompts
+                </h2>
+              </div>
+              <Link
+                to="/history"
+                className="group/btn text-xs font-mono font-medium text-cobalt-600 dark:text-cobalt-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>Full History ({prompts.length})</span>
+                <IconArrowRight size={12} className="transition-transform duration-200 group-hover/btn:translate-x-1" />
+              </Link>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {prompts.slice(0, 6).map((p) => (
+                <PromptCard
+                  key={p.id}
+                  prompt={p}
+                  onToggleSave={handleToggleSave}
+                  onDelete={handleDeletePrompt}
+                  onClick={() => setExpandedPrompt(p)}
+                />
+              ))}
+            </div>
+          </motion.section>
+        </div>
+      )}
 
       {/* Prompt Detail Modal */}
       <AnimatePresence>

@@ -22,7 +22,19 @@ import { FeedbackWidget } from '../components/improve/FeedbackWidget'
 import { AnalyzeSkeleton, ImproveSkeleton } from '../components/improve/ImproveSkeletons'
 import { useAuth } from '../contexts/AuthContext'
 import { savePrompt, toggleSavePrompt } from '../lib/db'
+import { saveSessionPrompt } from '../lib/sessionHistory'
 import { signInWithGoogle } from '../lib/auth'
+import {
+  IconRotateCcw,
+  IconAlertCircle,
+  IconCheckCircle,
+  IconBookmark,
+  IconBookmarkFilled,
+  IconHistory,
+  IconLogIn,
+} from '../components/ui/Icons'
+
+
 
 const GENERIC_CLARIFICATION_QUESTION: Question = {
   id: 'clarification',
@@ -121,7 +133,6 @@ export function Improve() {
   const [answers, setAnswers] = useState<QuestionAnswers>(() => hasUrlPrompt ? {} : (initialStored?.answers ?? {}))
   const [improveResult, setImproveResult] = useState<ImproveResponse | null>(() => hasUrlPrompt ? null : (initialStored?.improveResult ?? null))
   const [error, setError] = useState<string | null>(null)
-  const [errorKey, setErrorKey] = useState(0)
   const [savedPromptId, setSavedPromptId] = useState<string | null>(() => hasUrlPrompt ? null : (initialStored?.savedPromptId ?? null))
   const [isBookmarked, setIsBookmarked] = useState(() => hasUrlPrompt ? false : (initialStored?.isBookmarked ?? false))
   const [isSaving, setIsSaving] = useState(false)
@@ -162,16 +173,12 @@ export function Improve() {
 
   const triggerError = useCallback((msg: string | null) => {
     setError(msg)
-    if (msg) {
-      setErrorKey((k) => k + 1)
-      scrollToTop()
-    }
   }, [])
 
-  // Scroll to top immediately whenever screen/step, active question, or error changes
+  // Scroll to top immediately whenever screen/step or active question changes
   useEffect(() => {
     scrollToTop()
-  }, [step, currentQuestionIdx, error, errorKey])
+  }, [step, currentQuestionIdx])
 
   // ── Generate improved prompt (Stage C: Final Improvement) ─────────────────
   const generateImproved = useCallback(
@@ -198,6 +205,17 @@ export function Improve() {
         const normalizedResult = { ...result, scoreAfter: safeScoreAfter }
         setImproveResult(normalizedResult)
         setStep('results')
+
+        // Always save to session memory (for both logged-in and guest users)
+        const sessionRecord = saveSessionPrompt({
+          userId: user?.uid ?? 'guest',
+          originalPrompt: prompt,
+          improvedPrompt: result.improvedPrompt,
+          scoreBefore,
+          scoreAfter: safeScoreAfter,
+          saved: false,
+        })
+        setSavedPromptId(sessionRecord.id)
 
         // If user is already signed in, auto-save prompt to Firestore
         if (user) {
@@ -461,56 +479,26 @@ export function Improve() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-start py-8 sm:py-12 px-4 w-full">
-      {/* Background glow */}
-      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-indigo-600/[0.07] rounded-full blur-3xl pointer-events-none -z-10" />
-
       <div className="w-full max-w-3xl">
         {/* Top Bar Navigation: Easily start a new prompt from anywhere */}
         {step !== 'input' && (
-          <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center justify-between mb-5 px-1">
             <button
               onClick={handleReset}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors cursor-pointer px-3 py-1.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200/80 dark:border-indigo-500/20 shadow-2xs hover:shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 transition-colors cursor-pointer px-3 py-1.5 rounded-lg bg-cobalt-500/10 border border-cobalt-500/25 shadow-2xs hover:shadow-xs"
               title="Start a new prompt improvement"
             >
-              <span>✨</span>
+              <IconRotateCcw size={13} />
               <span>Improve Another Prompt</span>
             </button>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
-              Progress saved in session
+            <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 hidden sm:inline">
+              Session state preserved
             </span>
           </div>
         )}
 
         {/* Step Indicator */}
         <StepIndicator currentStep={activeStep} totalSteps={totalSteps} />
-
-        {/* Error banner */}
-        <AnimatePresence mode="wait">
-          {error && (
-            <motion.div
-              key={`error-${errorKey}`}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-between"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-base shrink-0">⚠️</span>
-                <span className="font-normal text-red-500 dark:text-red-400 truncate sm:whitespace-normal">
-                  {error}
-                </span>
-              </div>
-              <button
-                onClick={() => setError(null)}
-                className="text-red-400/60 hover:text-red-400 ml-2 text-xs font-medium cursor-pointer shrink-0"
-              >
-                Dismiss
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Step content */}
         <AnimatePresence mode="wait">
@@ -524,15 +512,24 @@ export function Improve() {
               transition={{ duration: 0.3 }}
             >
               <div className="text-center mb-8">
-                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-slate-100 mb-2 tracking-tight">
+                <span className="inline-block font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 mb-2">
+                  AI Prompt Improvement
+                </span>
+                <h1 className="font-serif-title text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2 tracking-tight">
                   Improve Your Prompt
                 </h1>
-                <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
-                  Paste any prompt. We'll analyze it, ask targeted questions, and craft a better version.
+                <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-lg mx-auto">
+                  Paste your prompt. We'll ask a few questions and help you make it clearer and more useful.
                 </p>
               </div>
 
-              <PromptInput onSubmit={handlePromptSubmit} defaultValue={originalPrompt} defaultMode={mode} />
+              <PromptInput
+                onSubmit={handlePromptSubmit}
+                defaultValue={originalPrompt}
+                defaultMode={mode}
+                error={error}
+                onClearError={() => setError(null)}
+              />
             </motion.div>
           )}
 
@@ -546,10 +543,26 @@ export function Improve() {
               transition={{ duration: 0.25 }}
             >
               <div className="mb-6 text-center">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider">
-                  Clarification Needed
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-ochre-500/10 border border-ochre-500/25 text-ochre-700 dark:text-ochre-400 text-xs font-mono font-semibold uppercase tracking-wider">
+                  <IconAlertCircle size={13} />
+                  <span>A Little More Detail Needed</span>
                 </span>
               </div>
+
+              {/* Anchor context: Original draft prompt being clarified */}
+              {originalPrompt && (
+                <div className="mb-6 p-4 rounded-xl border border-ochre-500/25 bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] shadow-2xs max-w-2xl mx-auto">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-ochre-500 shrink-0" />
+                    <span className="text-[11px] font-mono text-ochre-700 dark:text-ochre-400 uppercase tracking-wider font-semibold">
+                      Your Original Prompt
+                    </span>
+                  </div>
+                  <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-3">
+                    {originalPrompt}
+                  </p>
+                </div>
+              )}
 
               <QuestionCard
                 question={GENERIC_CLARIFICATION_QUESTION}
@@ -560,7 +573,9 @@ export function Improve() {
                   handleClarificationAnswer(typeof ans === 'string' ? ans : ans.join(' '))
                 }
                 hideSkip={true}
-                submitButtonText="Continue →"
+                submitButtonText="Continue"
+                error={error}
+                onClearError={() => setError(null)}
               />
             </motion.div>
           )}
@@ -579,19 +594,23 @@ export function Improve() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
             >
-              {/* Original prompt preview */}
-              <div className="mb-8 px-5 py-3.5 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-xs">
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 font-medium uppercase tracking-wider">Your prompt</p>
-                <p className="text-slate-800 dark:text-slate-300 text-sm">{originalPrompt}</p>
+              {/* Context Anchor: Draft prompt specification being refined */}
+              <div className="mb-6 p-4 rounded-xl border border-ochre-500/25 bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] shadow-2xs max-w-2xl mx-auto">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-ochre-500 shrink-0" />
+                    <span className="text-[11px] font-mono text-ochre-700 dark:text-ochre-400 uppercase tracking-wider font-semibold">
+                      Your Original Prompt
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">
+                    Question {currentQuestionIdx + 1} of {questionCount}
+                  </span>
+                </div>
+                <p className="font-mono-code text-xs sm:text-sm text-slate-800 dark:text-slate-200 line-clamp-3">
+                  {originalPrompt}
+                </p>
               </div>
-
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-8">
-                Let's make your prompt more specific.{' '}
-                <span className="text-slate-400 dark:text-slate-600">
-                  ({currentQuestionIdx + 1} of {questionCount} question
-                  {questionCount > 1 ? 's' : ''})
-                </span>
-              </p>
 
               <QuestionCard
                 question={analyzeResult.questions[currentQuestionIdx]}
@@ -600,6 +619,8 @@ export function Improve() {
                 onAnswer={handleFollowUpAnswer}
                 onBack={currentQuestionIdx > 0 ? handlePreviousQuestion : undefined}
                 existingAnswer={answers[analyzeResult.questions[currentQuestionIdx].id]}
+                error={error}
+                onClearError={() => setError(null)}
               />
             </motion.div>
           )}
@@ -609,70 +630,93 @@ export function Improve() {
             <ImproveSkeleton originalPrompt={originalPrompt} />
           )}
 
-          {/* Results */}
+          {/* Results: Structured Editorial Progression */}
           {step === 'results' && improveResult && analyzeResult && (
             <motion.div
               key="results"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.4 }}
               className="space-y-6"
             >
               {/* Results header */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-2">
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-sm font-semibold mb-4"
+                  transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sage-500/15 border border-sage-500/30 text-sage-700 dark:text-sage-300 text-xs font-mono font-semibold mb-3"
                 >
-                  ✅ Prompt improved!
+                  <IconCheckCircle size={14} className="text-sage-600 dark:text-sage-400" />
+                  <span>Prompt Improved Successfully</span>
                 </motion.div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Here's your improved prompt</h2>
+                <h2 className="font-serif-title text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+                  Your Improved Prompt is Ready
+                </h2>
               </div>
 
               {/* Actions Bar: Bookmark & Auth status */}
-              <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] shadow-xs">
-                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl workbench-card shadow-2xs">
+                <div className="flex items-center gap-2 text-xs font-mono text-slate-600 dark:text-slate-400">
                   {user ? (
-                    <span>💾 Auto-saved to your history</span>
+                    <span className="flex items-center gap-1.5">
+                      <IconCheckCircle size={14} className="text-sage-600 dark:text-sage-400" />
+                      <span>Saved to your history</span>
+                    </span>
                   ) : (
-                    <span>💡 Sign in with Google to save to your dashboard</span>
+                    <span className="flex items-center gap-1.5">
+                      <IconHistory size={14} className="text-slate-400" />
+                      <span>Sign in to save this prompt to your dashboard</span>
+                    </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {user ? (
                     <button
                       onClick={handleToggleBookmark}
                       disabled={isSaving}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5 cursor-pointer min-h-[36px] ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium border transition-colors flex items-center gap-1.5 cursor-pointer min-h-[34px] ${
                         isBookmarked
-                          ? 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-300'
-                          : 'bg-slate-50 dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20'
+                          ? 'bg-ochre-500/15 border-ochre-500/30 text-ochre-700 dark:text-ochre-300'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      {isBookmarked ? '★ Bookmarked' : '☆ Bookmark prompt'}
+                      {isBookmarked ? (
+                        <>
+                          <IconBookmarkFilled size={13} className="text-ochre-500" />
+                          <span>Bookmarked</span>
+                        </>
+                      ) : (
+                        <>
+                          <IconBookmark size={13} />
+                          <span>Bookmark</span>
+                        </>
+                      )}
                     </button>
                   ) : (
                     <button
                       onClick={handleSignInAndSave}
                       disabled={isSaving}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm min-h-[36px]"
+                      className="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-cobalt-600 hover:bg-cobalt-500 text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs min-h-[34px]"
                     >
+                      <IconLogIn size={13} />
                       <span>Sign in to save</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Before / After */}
+              {/* 1. Before / After Comparison */}
               <BeforeAfter
                 originalPrompt={originalPrompt}
                 improvedPrompt={improveResult.improvedPrompt}
               />
 
-              {/* Score */}
+              {/* 2. Educational What Changed & Why Rationale */}
+              <ExplanationPanel items={improveResult.explanation} />
+
+              {/* 3. Diagnostic Readiness Scoreboard */}
               <ScoreDisplay
                 scoreBefore={analyzeResult.scoreBefore}
                 scoreAfter={improveResult.scoreAfter}
@@ -680,11 +724,8 @@ export function Improve() {
                 breakdownAfter={improveResult.scoreBreakdown}
               />
 
-              {/* Explanation */}
-              <ExplanationPanel items={improveResult.explanation} />
-
-              {/* Feedback */}
-              <div className="glass-card rounded-2xl">
+              {/* 4. Feedback Assessment */}
+              <div className="workbench-card p-4 sm:p-5 shadow-2xs">
                 <FeedbackWidget
                   promptId={savedPromptId ?? undefined}
                   userId={user?.uid}
@@ -693,13 +734,14 @@ export function Improve() {
                 />
               </div>
 
-              {/* Try another */}
-              <div className="flex justify-center pt-2">
+              {/* 5. Start Another Prompt */}
+              <div className="flex justify-center pt-2 pb-4">
                 <button
                   onClick={handleReset}
-                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-semibold transition-colors cursor-pointer min-h-[44px] inline-flex items-center justify-center"
+                  className="text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 text-xs sm:text-sm font-mono font-semibold transition-colors cursor-pointer min-h-[44px] inline-flex items-center gap-2"
                 >
-                  ← Improve another prompt
+                  <IconRotateCcw size={15} />
+                  <span>Improve another prompt</span>
                 </button>
               </div>
             </motion.div>
@@ -710,3 +752,4 @@ export function Improve() {
     </div>
   )
 }
+

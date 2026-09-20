@@ -5,6 +5,19 @@ import { getAllFeedback, deleteFeedback } from '../lib/db'
 import type { AdminFeedbackRecord } from '../lib/db'
 import { Spinner } from '../components/ui/Spinner'
 import { Timestamp } from 'firebase/firestore'
+import {
+  IconLock,
+  IconAlertCircle,
+  IconCheck,
+  IconX,
+  IconTrash,
+  IconCopy,
+  IconStar,
+  IconCheckCircle,
+  IconMessageSquare,
+  IconShield,
+  IconHistory,
+} from '../components/ui/Icons'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,23 +48,32 @@ function formatDate(ts: Timestamp | null): string {
 function RatingBadge({ rating }: { rating?: 'up' | 'down' | number | string }) {
   if (rating === 'up') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
-        👍 Helpful (Yes)
+      <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-sage-500/15 text-sage-700 dark:text-sage-300 border border-sage-500/30">
+        <IconCheck size={12} className="text-sage-600 dark:text-sage-400" />
+        <span>Helpful</span>
       </span>
     )
   }
   if (rating === 'down') {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/25">
-        👎 Needs Improvement (No)
+      <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-ochre-500/15 text-ochre-700 dark:text-ochre-300 border border-ochre-500/30">
+        <IconX size={12} className="text-ochre-600 dark:text-ochre-400" />
+        <span>Needs Work</span>
       </span>
     )
   }
   const n = typeof rating === 'number' ? rating : parseInt(String(rating ?? '0'), 10)
-  if (!n || isNaN(n)) return <span className="text-slate-400 text-xs">—</span>
+  if (!n || isNaN(n)) return <span className="text-slate-400 text-xs font-mono">—</span>
   return (
-    <span className="text-amber-400 text-sm font-medium tracking-wide">
-      {'★'.repeat(Math.min(n, 5))}{'☆'.repeat(Math.max(0, 5 - n))}
+    <span className="text-amber-500 text-xs font-mono font-medium tracking-wide flex items-center gap-0.5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <IconStar
+          key={i}
+          size={13}
+          fill={i < n ? 'currentColor' : 'none'}
+          className={i < n ? 'text-amber-500' : 'text-slate-300 dark:text-slate-700'}
+        />
+      ))}
     </span>
   )
 }
@@ -59,14 +81,14 @@ function RatingBadge({ rating }: { rating?: 'up' | 'down' | number | string }) {
 function CategoryBadge({ category }: { category?: string }) {
   if (!category) return null
   const colors: Record<string, string> = {
-    'Bug Report': 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20',
-    'Feature Request': 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/20',
-    'Prompt Quality & AI Results': 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/20',
-    'Design & Usability': 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',
-    'General Feedback': 'bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/10',
+    'Bug Report': 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/25',
+    'Feature Request': 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25',
+    'Prompt Quality & AI Results': 'bg-cobalt-500/10 text-cobalt-700 dark:text-cobalt-400 border-cobalt-500/25',
+    'Design & Usability': 'bg-ochre-500/10 text-ochre-700 dark:text-ochre-400 border-ochre-500/25',
+    'General Feedback': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
   }
   return (
-    <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${colors[category] ?? colors['General Feedback']}`}>
+    <span className={`text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${colors[category] ?? colors['General Feedback']}`}>
       {category}
     </span>
   )
@@ -89,18 +111,29 @@ export function Admin() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isMultiDeleting, setIsMultiDeleting] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const isAdmin = !authLoading && !!user && user.email === ADMIN_EMAIL
 
   // Load feedback once confirmed as admin
   useEffect(() => {
     if (!isAdmin) return
+    let isMounted = true
     setDataLoading(true)
     setDataError(null)
     getAllFeedback()
-      .then((fb) => setFeedback(fb))
-      .catch((e) => setDataError((e as Error).message))
-      .finally(() => setDataLoading(false))
+      .then((fb) => {
+        if (isMounted) setFeedback(fb)
+      })
+      .catch((e) => {
+        if (isMounted) setDataError((e as Error).message)
+      })
+      .finally(() => {
+        if (isMounted) setDataLoading(false)
+      })
+    return () => {
+      isMounted = false
+    }
   }, [isAdmin])
 
   const handleDeleteFeedback = async (id: string) => {
@@ -166,10 +199,16 @@ export function Admin() {
     }
   }
 
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
+  }
+
   // ── Auth loading ──────────────────────────────────────────────────────────
   if (authLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center p-12">
         <Spinner size="xl" />
       </div>
     )
@@ -179,10 +218,12 @@ export function Admin() {
   if (!user) {
     return (
       <div className="flex-1 flex items-center justify-center pt-24 text-center px-4">
-        <div>
-          <p className="text-4xl mb-4">🔐</p>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-200 mb-2">Please sign in</h2>
-          <p className="text-slate-500 dark:text-slate-400">Admin access requires authentication.</p>
+        <div className="workbench-card p-8 rounded-2xl max-w-md shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-cobalt-600 dark:text-cobalt-400 flex items-center justify-center mx-auto mb-2">
+            <IconLock size={22} />
+          </div>
+          <h2 className="text-2xl font-serif-title font-bold text-slate-900 dark:text-slate-100">Please Sign In</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">Admin access requires administrator authentication.</p>
         </div>
       </div>
     )
@@ -192,10 +233,12 @@ export function Admin() {
   if (user.email !== ADMIN_EMAIL) {
     return (
       <div className="flex-1 flex items-center justify-center pt-24 text-center px-4">
-        <div>
-          <p className="text-4xl mb-4">🚫</p>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-200 mb-2">Access Denied</h2>
-          <p className="text-slate-500 dark:text-slate-400">This page is restricted to the PromptWise administrator.</p>
+        <div className="workbench-card p-8 rounded-2xl max-w-md shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-2">
+            <IconAlertCircle size={22} />
+          </div>
+          <h2 className="text-2xl font-serif-title font-bold text-slate-900 dark:text-slate-100">Access Denied</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">This page is restricted to the PromptWise administrator.</p>
         </div>
       </div>
     )
@@ -226,30 +269,38 @@ export function Admin() {
     <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
 
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-3">
-          🔐 Admin Feedback Center
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-cobalt-700 dark:text-cobalt-300 text-xs font-mono font-semibold uppercase tracking-wider mb-3">
+          <IconShield size={14} />
+          <span>Admin Center</span>
         </div>
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-1">User Feedback & Insights</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">
-          Strictly user feedback data · Signed in as <span className="font-semibold text-slate-700 dark:text-slate-300">{user.email}</span>
+        <h1 className="font-serif-title text-3xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-1">
+          User Feedback
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-mono">
+          Strictly user feedback data · Signed in as <span className="font-semibold text-slate-900 dark:text-slate-100">{user.email}</span>
         </p>
       </motion.div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
         {[
-          { icon: '💬', label: 'Total Feedback', value: totalCount, color: 'text-slate-900 dark:text-white' },
-          { icon: '👍', label: 'Helpful Votes', value: positiveVotes, color: 'text-emerald-600 dark:text-emerald-400' },
-          { icon: '👎', label: 'Needs Improvement', value: negativeVotes, color: 'text-red-600 dark:text-red-400' },
-          { icon: '⭐', label: 'Avg Star Rating', value: avgRating ? `${avgRating} / 5` : '—', color: 'text-amber-500' },
-        ].map((s) => (
-          <div key={s.label} className="glass-card rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-2xl mb-1">{s.icon}</p>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</p>
-          </div>
-        ))}
+          { Icon: IconMessageSquare, label: 'Total Feedback', value: totalCount, color: 'text-slate-900 dark:text-slate-100' },
+          { Icon: IconCheckCircle, label: 'Helpful Votes', value: positiveVotes, color: 'text-sage-600 dark:text-sage-400' },
+          { Icon: IconAlertCircle, label: 'Needs Work', value: negativeVotes, color: 'text-ochre-600 dark:text-ochre-400' },
+          { Icon: IconStar, label: 'Avg Rating', value: avgRating ? `${avgRating} / 5` : '—', color: 'text-amber-500' },
+        ].map((s) => {
+          const StatIcon = s.Icon
+          return (
+            <div key={s.label} className="workbench-card rounded-xl p-4 shadow-2xs text-center">
+              <div className="flex justify-center mb-1.5 text-slate-400 dark:text-slate-500">
+                <StatIcon size={18} />
+              </div>
+              <p className={`text-2xl font-bold font-mono ${s.color}`}>{s.value}</p>
+              <p className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</p>
+            </div>
+          )
+        })}
       </div>
 
       {/* Category filter chips & Bulk Action Bar */}
@@ -259,10 +310,10 @@ export function Admin() {
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`text-xs px-3.5 py-1.5 rounded-full border transition-colors cursor-pointer font-medium min-h-[32px] ${
+              className={`text-xs px-3.5 py-1.5 rounded-xl border transition-all cursor-pointer font-mono font-medium min-h-[32px] ${
                 categoryFilter === cat
-                  ? 'bg-indigo-600 border-indigo-500 text-white'
-                  : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:border-indigo-400'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs font-semibold'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'
               }`}
             >
               {cat}
@@ -281,23 +332,23 @@ export function Admin() {
                   setSelectMode(true)
                 }
               }}
-              className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`text-xs px-3 py-1.5 rounded-lg border font-mono font-medium transition-colors cursor-pointer flex items-center gap-1.5 min-h-[32px] ${
                 selectMode
-                  ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-300 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
-                  : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-300 dark:border-blue-500/30 text-cobalt-600 dark:text-cobalt-400'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}
             >
-              <span>{selectMode ? '✕ Cancel' : '☑️ Select'}</span>
+              <span>{selectMode ? 'Cancel' : 'Select'}</span>
             </button>
           )}
 
           {selectMode && filteredFeedback.length > 0 && (
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-xs font-mono text-slate-600 dark:text-slate-400 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={filteredFeedback.length > 0 && filteredFeedback.every((f) => selectedIds.has(f.id))}
                 onChange={() => toggleSelectAll(filteredFeedback.map((f) => f.id))}
-                className="w-3.5 h-3.5 rounded accent-indigo-600 cursor-pointer"
+                className="w-3.5 h-3.5 rounded accent-blue-600 cursor-pointer"
               />
               <span>Select All</span>
             </label>
@@ -307,14 +358,14 @@ export function Admin() {
             <button
               onClick={handleDeleteSelected}
               disabled={isMultiDeleting}
-              className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+              className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20 font-mono font-semibold transition-colors cursor-pointer flex items-center gap-1.5 min-h-[32px]"
             >
-              <span>🗑️</span>
+              <IconTrash size={13} />
               <span>{isMultiDeleting ? 'Deleting…' : `Delete Selected (${selectedIds.size})`}</span>
             </button>
           )}
 
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
             Showing <span className="font-semibold text-slate-800 dark:text-slate-200">{filteredFeedback.length}</span> responses
           </p>
         </div>
@@ -325,26 +376,35 @@ export function Admin() {
         <div className="flex justify-center py-16"><Spinner size="lg" /></div>
       )}
       {dataError && (
-        <div className="glass-card rounded-2xl p-6 text-center">
-          <p className="text-4xl mb-3">⚠️</p>
-          <p className="text-slate-700 dark:text-slate-300 font-semibold mb-1">Failed to load feedback</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">{dataError}</p>
+        <div className="workbench-card rounded-2xl p-6 text-center shadow-2xs space-y-2">
+          <div className="w-10 h-10 rounded-full bg-ochre-500/10 text-ochre-600 dark:text-ochre-400 flex items-center justify-center mx-auto mb-1">
+            <IconAlertCircle size={20} />
+          </div>
+          <p className="text-slate-900 dark:text-slate-100 font-semibold text-sm">Failed to load feedback</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs">{dataError}</p>
         </div>
       )}
 
       {/* Feedback Feed */}
       {!dataLoading && !dataError && (
         filteredFeedback.length === 0 ? (
-          <div className="glass-card rounded-2xl p-12 text-center">
-            <p className="text-3xl mb-2">📭</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No feedback found in this category.</p>
+          <div className="workbench-card rounded-2xl p-12 text-center shadow-2xs space-y-2">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-1">
+              <IconHistory size={20} />
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">No feedback found in this category.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {filteredFeedback.map((f) => {
               const isSelected = selectedIds.has(f.id)
               return (
-                <div key={f.id} className={`glass-card rounded-2xl p-5 shadow-sm border transition-colors ${isSelected ? 'border-indigo-500/50 bg-indigo-500/[0.03]' : 'border-slate-200/80 dark:border-white/[0.06]'}`}>
+                <div
+                  key={f.id}
+                  className={`workbench-card rounded-xl p-5 shadow-2xs border transition-colors ${
+                    isSelected ? 'border-cobalt-500/50 bg-cobalt-500/[0.03]' : 'border-slate-200/80 dark:border-slate-800'
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 flex-wrap">
                       {selectMode && (
@@ -352,7 +412,7 @@ export function Admin() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectFeedback(f.id)}
-                          className="w-4 h-4 rounded accent-indigo-600 cursor-pointer"
+                          className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
                           title="Select this feedback"
                         />
                       )}
@@ -360,75 +420,95 @@ export function Admin() {
                       <CategoryBadge category={f.category} />
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-slate-400">{formatDate(f.createdAt)}</span>
+                      <span className="text-xs font-mono text-slate-400">{formatDate(f.createdAt)}</span>
                       <button
                         type="button"
                         onClick={() => handleDeleteFeedback(f.id)}
-                        className="text-sm text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
+                        className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10"
                         title="Delete feedback entry"
                       >
-                        🗑️
+                        <IconTrash size={14} />
                       </button>
                     </div>
                   </div>
 
-                {/* Feedback comment / message */}
-                {f.message && (
-                  <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed mb-3 font-medium">
-                    "{f.message}"
-                  </p>
-                )}
+                  {/* Feedback comment / message */}
+                  {f.message && (
+                    <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed mb-3 font-medium">
+                      "{f.message}"
+                    </p>
+                  )}
 
-                {/* Prompt Context Box */}
-                {(f.originalPrompt || f.improvedPrompt) && (
-                  <div className="space-y-3 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
-                    {f.originalPrompt && (
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06]">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            User Prompt
+                  {/* Prompt Context Box */}
+                  {(f.originalPrompt || f.improvedPrompt) && (
+                    <div className="space-y-3 mt-3 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+                      {f.originalPrompt && (
+                        <div className="p-3.5 rounded-xl bg-ochre-500/[0.04] dark:bg-ochre-500/[0.06] border border-ochre-500/25">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-ochre-700 dark:text-ochre-400">
+                              Original Prompt
+                            </p>
+                            <button
+                              onClick={() => handleCopy(f.originalPrompt || '', `orig-${f.id}`)}
+                              className="text-[11px] font-mono text-slate-500 hover:text-cobalt-600 dark:hover:text-cobalt-400 cursor-pointer font-medium inline-flex items-center gap-1"
+                            >
+                              {copiedId === `orig-${f.id}` ? (
+                                <>
+                                  <IconCheck size={11} className="text-sage-600 dark:text-sage-400" />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconCopy size={11} />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap break-words leading-relaxed select-text">
+                            {f.originalPrompt}
                           </p>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(f.originalPrompt || '')}
-                            className="text-[11px] text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer font-medium"
-                          >
-                            📋 Copy
-                          </button>
                         </div>
-                        <p className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap break-words leading-relaxed select-text">
-                          {f.originalPrompt}
-                        </p>
-                      </div>
-                    )}
-                    {f.improvedPrompt && (
-                      <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-500/[0.05] border border-indigo-200/60 dark:border-indigo-500/10">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                            Improved Output Shown
+                      )}
+                      {f.improvedPrompt && (
+                        <div className="p-3.5 rounded-xl bg-sage-500/[0.04] dark:bg-sage-500/[0.06] border border-sage-500/30">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-sage-700 dark:text-sage-400">
+                              Improved Prompt
+                            </p>
+                            <button
+                              onClick={() => handleCopy(f.improvedPrompt || '', `imp-${f.id}`)}
+                              className="text-[11px] font-mono text-sage-700 dark:text-sage-300 hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
+                            >
+                              {copiedId === `imp-${f.id}` ? (
+                                <>
+                                  <IconCheck size={11} className="text-sage-600 dark:text-sage-400" />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconCopy size={11} />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap break-words leading-relaxed select-text max-h-[500px] overflow-y-auto">
+                            {f.improvedPrompt}
                           </p>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(f.improvedPrompt || '')}
-                            className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer font-medium"
-                          >
-                            📋 Copy
-                          </button>
                         </div>
-                        <p className="text-xs text-slate-800 dark:text-slate-200 font-mono whitespace-pre-wrap break-words leading-relaxed select-text max-h-[500px] overflow-y-auto">
-                          {f.improvedPrompt}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {f.email && (
-                  <div className="mt-3 pt-2 text-xs text-slate-400 border-t border-slate-100 dark:border-white/[0.04]">
-                    Author: <a href={`mailto:${f.email}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">{f.email}</a>
-                  </div>
-                )}
-              </div>
-            )
-          })}
+                  {f.email && (
+                    <div className="mt-3 pt-2 text-xs font-mono text-slate-400 border-t border-slate-200/80 dark:border-slate-800">
+                      Author: <a href={`mailto:${f.email}`} className="text-cobalt-600 dark:text-cobalt-400 hover:underline">{f.email}</a>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )
       )}

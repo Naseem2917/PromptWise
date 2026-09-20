@@ -3,7 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { saveQuizResult } from '../lib/db'
-import { Spinner } from '../components/ui/Spinner'
+import {
+  IconCheckCircle,
+  IconXCircle,
+  IconRotateCcw,
+  IconRefreshCw,
+  IconBookOpen,
+  IconSparkles,
+  IconArrowRight,
+  IconAlertCircle,
+  IconAward,
+  IconLightbulb,
+} from '../components/ui/Icons'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,7 +30,7 @@ interface QuizQuestion {
 
 async function fetchQuizQuestions(): Promise<QuizQuestion[]> {
   const res = await fetch('/api/quiz')
-  const json = await res.json() as {
+  const json = (await res.json()) as {
     success?: boolean
     data?: { questions: QuizQuestion[] }
     error?: string
@@ -73,6 +84,78 @@ function clearStoredQuiz() {
   } catch (e) {}
 }
 
+// ── Skeleton Loader ─────────────────────────────────────────────────────────
+
+function QuizSkeleton() {
+  return (
+    <motion.div
+      key="quiz-skeleton"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -14 }}
+      transition={{ duration: 0.25 }}
+      className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full space-y-6"
+    >
+      {/* Editorial Header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cobalt-500/10 border border-cobalt-500/25 text-cobalt-700 dark:text-cobalt-300 text-xs font-mono font-medium tracking-wide mb-2.5">
+          <IconSparkles size={14} className="animate-spin text-cobalt-600 dark:text-cobalt-400 shrink-0" />
+          <span>Generating quiz questions with AI…</span>
+        </div>
+        <h1 className="font-serif-title text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">
+          Prompt Engineering Quiz
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          Generating questions to test your understanding of prompt writing and AI concepts.
+        </p>
+      </div>
+
+      {/* Question Card Skeleton */}
+      <div className="workbench-card rounded-2xl p-6 sm:p-8 shadow-2xs space-y-6">
+        {/* Top Progress / Controls placeholder */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-28 h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800" />
+            <div className="w-20 h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          </div>
+          <div className="w-28 h-4 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        </div>
+
+        {/* Progress track skeleton */}
+        <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+          <div className="bg-blue-600/50 dark:bg-blue-500/50 h-full w-1/4 rounded-full animate-pulse" />
+        </div>
+
+        {/* Question Title Skeleton */}
+        <div className="space-y-2.5 pt-1">
+          <div className="w-11/12 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+          <div className="w-3/4 h-5 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+        </div>
+
+        {/* Options Skeletons */}
+        <div className="space-y-3 pt-2">
+          {[1, 2, 3, 4].map((idx) => (
+            <div
+              key={idx}
+              className="w-full min-h-[46px] p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 flex items-start gap-3 shadow-2xs animate-pulse"
+              style={{ animationDelay: `${idx * 100}ms` }}
+            >
+              <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800 shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1.5 pt-1">
+                <div
+                  className="h-4 rounded bg-slate-200 dark:bg-slate-800"
+                  style={{ width: `${55 + (idx % 3) * 18}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function Quiz() {
@@ -82,15 +165,21 @@ export function Quiz() {
 
   // ── Quiz data state
   const [questions, setQuestions] = useState<QuizQuestion[]>(() => initialStored?.questions ?? [])
-  const [loading, setLoading] = useState<boolean>(() => !initialStored || initialStored.questions.length === 0)
+  const [loading, setLoading] = useState<boolean>(
+    () => !initialStored || initialStored.questions.length === 0,
+  )
   const [loadError, setLoadError] = useState<string | null>(null)
 
   // ── Quiz progress state
   const [currentIdx, setCurrentIdx] = useState<number>(() => initialStored?.currentIdx ?? 0)
-  const [selectedOption, setSelectedOption] = useState<number | null>(() => initialStored?.selectedOption ?? null)
+  const [selectedOption, setSelectedOption] = useState<number | null>(
+    () => initialStored?.selectedOption ?? null,
+  )
   const [isAnswered, setIsAnswered] = useState<boolean>(() => initialStored?.isAnswered ?? false)
   const [score, setScore] = useState<number>(() => initialStored?.score ?? 0)
-  const [quizFinished, setQuizFinished] = useState<boolean>(() => initialStored?.quizFinished ?? false)
+  const [quizFinished, setQuizFinished] = useState<boolean>(
+    () => initialStored?.quizFinished ?? false,
+  )
 
   // Sync state to sessionStorage whenever progress changes
   useEffect(() => {
@@ -167,76 +256,76 @@ export function Quiz() {
   }
 
   const handleRestart = () => {
-    loadQuestions()  // fetch fresh questions from AI on user click
+    loadQuestions() // fetch fresh questions from AI on user click
   }
 
   const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0
 
   const getRank = () => {
-    if (percentage === 100) return { title: 'Prompt Grandmaster 🏆', desc: 'Flawless score! You have master-level intuition for prompt design and model psychology.' }
-    if (percentage >= 80)  return { title: 'Lead AI Engineer ⚡', desc: 'Exceptional work! You understand advanced prompting patterns, grounding, and constraints.' }
-    if (percentage >= 50)  return { title: 'Practitioner 🌱', desc: 'Solid foundation! A quick review of Few-Shot prompting and Delimiters will push you to top tier.' }
-    return { title: 'Prompt Explorer 🚀', desc: 'Good start! Check out our Learn section to master the 6 core prompt elements.' }
+    if (percentage === 100) {
+      return {
+        title: 'Prompt Grandmaster',
+        desc: 'Flawless score! You have master-level intuition for prompt design, grounding, and model psychology.',
+      }
+    }
+    if (percentage >= 80) {
+      return {
+        title: 'Lead AI Engineer',
+        desc: 'Exceptional work! You understand advanced prompting patterns, grounding, and constraints.',
+      }
+    }
+    if (percentage >= 50) {
+      return {
+        title: 'Practitioner',
+        desc: 'Solid foundation! A quick review of Few-Shot conditioning and Delimiters will push you to top tier.',
+      }
+    }
+    return {
+      title: 'Prompt Explorer',
+      desc: 'Good start! Review our Learn section to master the 6 core prompt elements and constraint techniques.',
+    }
   }
 
   // ── Loading screen ─────────────────────────────────────────────────────────
   if (loading) {
-    return (
-      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-3">
-            🧠 Skills Assessment
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
-            Prompt Engineering Quiz
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
-            Test your knowledge of LLM reasoning, few-shot prompting, and hallucination defense.
-          </p>
-        </motion.div>
-
-        <div className="glass-card rounded-2xl p-12 flex flex-col items-center gap-5 shadow-sm">
-          <Spinner size="xl" />
-          <div className="text-center">
-            <p className="text-slate-800 dark:text-slate-200 font-semibold">Generating your quiz with AI…</p>
-            <p className="text-slate-500 dark:text-slate-500 text-sm mt-1">Fresh questions every time. This takes a few seconds.</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <QuizSkeleton />
   }
+
 
   // ── Error screen ───────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-3">
-            🧠 Skills Assessment
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
-            Prompt Engineering Quiz
+          <span className="inline-block font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 mb-2">
+            Assessment Status
+          </span>
+          <h1 className="font-serif-title text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">
+            Prompt Engineering Assessment
           </h1>
         </motion.div>
 
-        <div className="glass-card rounded-2xl p-10 text-center shadow-sm">
-          <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-slate-700 dark:text-slate-300 font-semibold mb-2">Could not generate quiz questions</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{loadError}</p>
+        <div className="workbench-card rounded-2xl p-10 text-center shadow-2xs max-w-lg mx-auto space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-ochre-500/10 border border-ochre-500/20 text-ochre-600 dark:text-ochre-400 flex items-center justify-center mx-auto">
+            <IconAlertCircle size={24} />
+          </div>
+          <div>
+            <p className="text-slate-900 dark:text-slate-100 font-bold mb-1">
+              Could not generate assessment questions
+            </p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">{loadError}</p>
+          </div>
           <button
+            type="button"
             onClick={loadQuestions}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-indigo-600/20 min-h-[44px]"
+            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-mono font-semibold transition-colors cursor-pointer shadow-xs min-h-[40px] inline-flex items-center gap-2"
           >
-            🔄 Try Again
+            <IconRotateCcw size={15} />
+            <span>Try Again</span>
           </button>
         </div>
       </div>
@@ -245,45 +334,51 @@ export function Quiz() {
 
   // ── Main quiz ──────────────────────────────────────────────────────────────
   return (
-    <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+    <div className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-8"
       >
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-3">
-          🧠 Skills Assessment
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
+        <span className="inline-block font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 mb-2">
+          AI Literacy Quiz
+        </span>
+        <h1 className="font-serif-title text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-3">
           Prompt Engineering Quiz
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
-          Test your knowledge of LLM reasoning, few-shot prompting, and hallucination defense.
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          Test your understanding of how to give clear instructions to AI and get better answers.
         </p>
       </motion.div>
 
       {!quizFinished ? (
-        <div className="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="workbench-card rounded-2xl p-6 sm:p-8 shadow-2xs">
           {/* Progress bar and control */}
-          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-3">
-            <div className="flex items-center gap-3">
-              <span>Question {currentIdx + 1} of {questions.length}</span>
-              <span className="text-slate-300 dark:text-slate-600">·</span>
-              <span>Score: {score}/{currentIdx + (isAnswered ? 1 : 0)}</span>
+          <div className="flex items-center justify-between text-xs font-mono text-slate-600 dark:text-slate-400 mb-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
+                Question {currentIdx + 1} of {questions.length}
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+              <span>
+                Score: {score} / {currentIdx + (isAnswered ? 1 : 0)}
+              </span>
             </div>
             <button
+              type="button"
               onClick={handleRestart}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 font-semibold cursor-pointer flex items-center gap-1 px-2 py-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+              className="text-xs font-mono font-medium text-cobalt-600 dark:text-cobalt-400 hover:text-cobalt-700 dark:hover:text-cobalt-300 cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-cobalt-500/10 transition-colors"
               title="Generate a brand new set of questions"
             >
-              <span>🔄</span>
-              <span>New Quiz</span>
+              <IconRefreshCw size={13} />
+              <span>New Question Set</span>
             </button>
           </div>
-          <div className="w-full bg-slate-200 dark:bg-white/[0.05] h-1.5 rounded-full overflow-hidden mb-6">
+
+          <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mb-6">
             <div
-              className="bg-gradient-to-r from-indigo-500 to-violet-500 h-full transition-all duration-300"
+              className="bg-blue-600 dark:bg-blue-500 h-full transition-all duration-300 rounded-full"
               style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
             />
           </div>
@@ -292,10 +387,10 @@ export function Quiz() {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIdx}
-              initial={{ opacity: 0, x: 16 }}
+              initial={{ opacity: 0, x: 14 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }}
-              transition={{ duration: 0.22 }}
+              exit={{ opacity: 0, x: -14 }}
+              transition={{ duration: 0.2 }}
             >
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 leading-snug">
                 {currentQ.question}
@@ -305,62 +400,116 @@ export function Quiz() {
               <div className="space-y-3 mb-6">
                 {currentQ.options.map((option, idx) => {
                   let optionStyle =
-                    'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.08] text-slate-800 dark:text-slate-300 hover:border-indigo-400 dark:hover:border-white/20 hover:bg-slate-50 dark:hover:bg-white/[0.06] shadow-xs'
+                    'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-cobalt-400 dark:hover:border-cobalt-600 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 shadow-2xs'
 
                   if (isAnswered) {
                     if (idx === currentQ.correctIdx) {
+                      // Correct option: Sage
                       optionStyle =
-                        'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold'
+                        'bg-sage-500/[0.08] dark:bg-sage-500/[0.14] border-sage-500/50 text-slate-900 dark:text-slate-100 font-medium'
                     } else if (selectedOption === idx) {
+                      // Selected incorrect option: Ochre (educational, non-punitive)
                       optionStyle =
-                        'bg-red-50 dark:bg-red-500/20 border-red-300 dark:border-red-500/40 text-red-800 dark:text-red-300'
+                        'bg-ochre-500/[0.08] dark:bg-ochre-500/[0.14] border-ochre-500/50 text-slate-900 dark:text-slate-100'
                     } else {
-                      optionStyle = 'opacity-40 bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.04] text-slate-400'
+                      // Other options: Muted
+                      optionStyle =
+                        'opacity-40 bg-slate-50/50 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/60 text-slate-400 dark:text-slate-500'
                     }
                   }
 
                   return (
                     <button
                       key={idx}
+                      type="button"
                       onClick={() => handleSelect(idx)}
                       disabled={isAnswered}
-                      className={`w-full text-left p-4 rounded-xl border text-sm transition-all duration-200 cursor-pointer flex items-start gap-3 min-h-[44px] ${optionStyle}`}
+                      className={`w-full text-left p-4 rounded-xl border text-xs sm:text-sm transition-all duration-150 flex items-start gap-3 min-h-[46px] ${
+                        isAnswered ? 'cursor-default' : 'cursor-pointer'
+                      } ${optionStyle}`}
                     >
-                      <span className="w-5 h-5 rounded-full border border-slate-300 dark:border-white/20 flex items-center justify-center text-xs shrink-0 mt-0.5 font-bold text-slate-700 dark:text-slate-300">
+                      <span
+                        className={`w-6 h-6 rounded-lg border flex items-center justify-center text-xs shrink-0 mt-0.5 font-mono font-bold ${
+                          isAnswered && idx === currentQ.correctIdx
+                            ? 'bg-sage-500 text-white border-sage-600'
+                            : isAnswered && selectedOption === idx
+                              ? 'bg-ochre-500 text-white border-ochre-600'
+                              : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span className="flex-1">{option}</span>
-                      {isAnswered && idx === currentQ.correctIdx && <span>✅</span>}
-                      {isAnswered && selectedOption === idx && idx !== currentQ.correctIdx && <span>❌</span>}
+                      <span className="flex-1 leading-relaxed">{option}</span>
+                      {isAnswered && idx === currentQ.correctIdx && (
+                        <IconCheckCircle
+                          size={18}
+                          className="text-sage-600 dark:text-sage-400 shrink-0 mt-0.5"
+                        />
+                      )}
+                      {isAnswered && selectedOption === idx && idx !== currentQ.correctIdx && (
+                        <IconXCircle
+                          size={18}
+                          className="text-ochre-600 dark:text-ochre-400 shrink-0 mt-0.5"
+                        />
+                      )}
                     </button>
                   )
                 })}
               </div>
 
-              {/* Explanation Banner */}
+              {/* Explanation Callout */}
               <AnimatePresence>
                 {isAnswered && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 rounded-xl bg-indigo-50/70 dark:bg-white/[0.03] border border-indigo-200 dark:border-white/[0.08] mb-6 text-xs sm:text-sm"
+                    transition={{ duration: 0.2 }}
+                    className={`p-4 sm:p-5 rounded-xl border mb-6 text-xs sm:text-sm leading-relaxed ${
+                      selectedOption === currentQ.correctIdx
+                        ? 'bg-sage-500/[0.05] dark:bg-sage-500/[0.08] border-sage-500/30'
+                        : 'bg-ochre-500/[0.05] dark:bg-ochre-500/[0.08] border-ochre-500/30'
+                    }`}
                   >
-                    <p className="font-semibold text-indigo-600 dark:text-indigo-400 mb-1">
-                      {selectedOption === currentQ.correctIdx ? '🎉 Correct!' : '💡 Key Insight:'}
-                    </p>
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{currentQ.explanation}</p>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      {selectedOption === currentQ.correctIdx ? (
+                        <>
+                          <IconCheckCircle
+                            size={16}
+                            className="text-sage-600 dark:text-sage-400 shrink-0"
+                          />
+                          <span className="font-mono text-xs font-bold uppercase tracking-wider text-sage-700 dark:text-sage-300">
+                            Correct!
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <IconLightbulb
+                            size={16}
+                            className="text-ochre-600 dark:text-ochre-400 shrink-0"
+                          />
+                          <span className="font-mono text-xs font-bold uppercase tracking-wider text-ochre-700 dark:text-ochre-300">
+                            Explanation
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-slate-700 dark:text-slate-300">{currentQ.explanation}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Next Button */}
               {isAnswered && (
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-2">
                   <button
+                    type="button"
                     onClick={handleNext}
-                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-indigo-600/20 min-h-[44px]"
+                    className="group/btn px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-mono font-semibold transition-colors cursor-pointer shadow-xs min-h-[42px] inline-flex items-center gap-1.5"
                   >
-                    {currentIdx + 1 === questions.length ? 'See Final Results →' : 'Next Question →'}
+                    <span>
+                      {currentIdx + 1 === questions.length ? 'View Quiz Results' : 'Next Question'}
+                    </span>
+                    <IconArrowRight size={14} className="transition-transform duration-200 group-hover/btn:translate-x-1" />
                   </button>
                 </div>
               )}
@@ -370,57 +519,89 @@ export function Quiz() {
       ) : (
         /* Results Screen */
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass-card rounded-2xl p-8 text-center shadow-lg"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="workbench-card rounded-2xl p-8 sm:p-10 text-center shadow-2xs max-w-2xl mx-auto space-y-6"
         >
-          <div className="text-5xl mb-4">🏆</div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mb-2">
-            {getRank().title}
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md mx-auto mb-6">
-            {getRank().desc}
-          </p>
+          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-cobalt-600 dark:text-cobalt-400 mx-auto">
+            <IconAward size={28} />
+          </div>
 
-          <div className="inline-flex items-center gap-6 px-6 py-3 rounded-2xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] mb-8">
+          <div>
+            <span className="inline-block font-mono text-xs font-semibold uppercase tracking-wider text-cobalt-600 dark:text-cobalt-400 mb-1">
+              Quiz Complete
+            </span>
+            <h2 className="font-serif-title text-2xl sm:text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-2">
+              {getRank().title}
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+              {getRank().desc}
+            </p>
+          </div>
+
+          {/* Diagnostic Metrics */}
+          <div className="inline-flex items-center gap-6 sm:gap-10 px-6 sm:px-8 py-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
             <div>
-              <p className="text-xs text-slate-500 uppercase">Correct Answers</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{score} / {questions.length}</p>
+              <p className="text-[11px] font-mono font-medium text-slate-500 uppercase tracking-wider">
+                Correct Answers
+              </p>
+              <p className="text-2xl sm:text-3xl font-mono font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {score} / {questions.length}
+              </p>
             </div>
-            <div className="w-px h-8 bg-slate-200 dark:bg-white/10" />
+            <div className="w-px h-10 bg-slate-200 dark:bg-slate-800" />
             <div>
-              <p className="text-xs text-slate-500 uppercase">Proficiency</p>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{percentage}%</p>
+              <p className="text-[11px] font-mono font-medium text-slate-500 uppercase tracking-wider">
+                Score
+              </p>
+              <p
+                className={`text-2xl sm:text-3xl font-mono font-bold mt-0.5 ${
+                  percentage >= 80
+                    ? 'text-sage-600 dark:text-sage-400'
+                    : percentage >= 50
+                      ? 'text-cobalt-600 dark:text-cobalt-400'
+                      : 'text-ochre-600 dark:text-ochre-400'
+                }`}
+              >
+                {percentage}%
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4">
+          {/* Actions */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <button
+              type="button"
               onClick={handleRetake}
-              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-indigo-600/20 cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-mono font-semibold transition-colors shadow-xs cursor-pointer min-h-[42px] inline-flex items-center justify-center gap-1.5"
             >
-              🔁 Retake Quiz
+              <IconRotateCcw size={14} />
+              <span>Retake Set</span>
             </button>
 
             <button
+              type="button"
               onClick={handleRestart}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] dark:text-slate-300 dark:border-white/[0.1] text-sm font-semibold transition-colors cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5"
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-mono font-semibold transition-colors cursor-pointer min-h-[42px] inline-flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              🔄 New Quiz
+              <IconRefreshCw size={14} />
+              <span>New Question Set</span>
             </button>
 
             <Link
               to="/learn"
-              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-white/[0.05] dark:hover:bg-white/[0.1] dark:text-slate-300 dark:border-white/[0.1] text-sm font-semibold transition-colors min-h-[44px] flex items-center justify-center"
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-mono font-semibold transition-colors min-h-[42px] inline-flex items-center justify-center gap-1.5 shadow-2xs"
             >
-              📖 Review Masterclass
+              <IconBookOpen size={14} />
+              <span>Review Concepts</span>
             </Link>
 
             <Link
               to="/improve"
-              className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-violet-600/20 min-h-[44px] flex items-center justify-center"
+              className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-xs sm:text-sm font-mono font-semibold transition-colors min-h-[42px] inline-flex items-center justify-center gap-1.5 shadow-xs"
             >
-              ⚡ Improve a Prompt
+              <IconSparkles size={14} />
+              <span>Improve a Prompt</span>
             </Link>
           </div>
         </motion.div>
