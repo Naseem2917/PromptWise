@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { saveQuizResult } from '../lib/db'
+import { fetchQuizQuestions, type QuizQuestion } from '../lib/api'
 import {
   IconCheckCircle,
   IconXCircle,
@@ -15,31 +16,6 @@ import {
   IconAward,
   IconLightbulb,
 } from '../components/ui/Icons'
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface QuizQuestion {
-  id: number
-  question: string
-  options: string[]
-  correctIdx: number
-  explanation: string
-}
-
-// ── API helper ────────────────────────────────────────────────────────────────
-
-async function fetchQuizQuestions(): Promise<QuizQuestion[]> {
-  const res = await fetch('/api/quiz')
-  const json = (await res.json()) as {
-    success?: boolean
-    data?: { questions: QuizQuestion[] }
-    error?: string
-  }
-  if (!res.ok || !json.success) {
-    throw new Error(json.error ?? 'Failed to load quiz questions.')
-  }
-  return json.data!.questions
-}
 
 // ── Storage Keys ─────────────────────────────────────────────────────────────
 const QUIZ_STORAGE_KEY = 'promptwise_quiz_session'

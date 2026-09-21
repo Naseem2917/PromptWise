@@ -9,7 +9,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:staging": "npm run build && wrangler deploy --name promptwise-staging",
+    "deploy:prod": "npm run build && wrangler deploy --name promptwise"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

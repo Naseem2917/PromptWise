@@ -555,8 +555,16 @@ Return ONLY valid JSON — no markdown, no text outside JSON:
 			} catch (err: unknown) {
 				const msg = (err as Error).message ?? String(err)
 				console.error('Quiz error:', msg)
+
+				let friendlyMsg = 'Could not generate quiz questions right now. Please try again in a moment.'
+				if (msg.includes('503') || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('unavailable')) {
+					friendlyMsg = 'The AI service is currently experiencing very high demand. Please wait a few seconds and try again.'
+				} else if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate limit')) {
+					friendlyMsg = 'AI rate limit reached. Please wait a moment before trying again.'
+				}
+
 				return Response.json(
-					{ error: `Could not generate quiz questions. Please try again. (${msg})` },
+					{ error: friendlyMsg, rawError: msg },
 					{ status: 500, headers: CORS_HEADERS },
 				)
 			}

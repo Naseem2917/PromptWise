@@ -5,5 +5,10 @@
 	"compatibility_date": "2026-09-09",
 	"assets": {
 		"not_found_handling": "single-page-application"
+	},
+	"env": {
+		"staging": {
+			"name": "promptwise-staging"
+		}
 	}
 }

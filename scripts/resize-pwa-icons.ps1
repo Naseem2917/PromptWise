@@ -1,7 +1,7 @@
 Add-Type -AssemblyName System.Drawing
 
 $publicDir = "d:\CEP\PromptWise\public"
-$srcPath = Join-Path $publicDir "20260921_102837.png"
+$srcPath = Join-Path $publicDir "20260921_195054.png"
 
 if (-not (Test-Path $srcPath)) {
     Write-Error "Source file $srcPath not found!"

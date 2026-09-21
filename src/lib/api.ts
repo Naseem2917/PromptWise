@@ -88,3 +88,35 @@ export async function improvePrompt(
 
   return json.data!
 }
+
+export interface QuizQuestion {
+  id: number
+  question: string
+  options: string[]
+  correctIdx: number
+  explanation: string
+}
+
+export async function fetchQuizQuestions(): Promise<QuizQuestion[]> {
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/api/quiz`)
+  } catch (err: unknown) {
+    const raw = (err as Error)?.message ?? String(err)
+    throw new Error(formatFriendlyError(raw, 'Unable to connect to the server. Please check your connection and try again.'))
+  }
+
+  const json = (await res.json()) as {
+    success?: boolean
+    data?: { questions: QuizQuestion[] }
+    error?: string
+    rawError?: string
+  }
+
+  if (!res.ok || !json.success || !json.data?.questions) {
+    const raw = json.rawError ?? json.error ?? `Server error (${res.status})`
+    throw new Error(formatFriendlyError(raw, json.error ?? 'Could not generate quiz questions right now. Please try again in a moment.'))
+  }
+
+  return json.data.questions
+}

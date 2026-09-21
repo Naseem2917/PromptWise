@@ -93,9 +93,11 @@ This produces generic or hallucinated answers. PromptWise addresses this digital
 - 1-click loading directly into the `/improve` workbench.
 
 ### 5. Interactive Practice Quiz (`/quiz`)
-- 6-question diagnostic quiz evaluating prompt engineering theory, token economics, and AI reasoning.
+- 6-question dynamic diagnostic quiz evaluating prompt engineering theory, token economics, and AI reasoning.
+- Multi-model edge failover (`3.5-Lite` → `3.6-Flash` → `3.7-Flash`) with sanitized, user-friendly error handling.
+- Automated smooth scroll alignment ensuring students are always positioned at the top of the next question.
 - Session-persistent state ensuring navigation away from the page never loses active progress.
-- Dedicated `Retake Quiz` and `New Quiz` controls.
+- Dedicated `Retake Set` and `New Question Set` controls with responsive mobile actions.
 
 ### 6. Student Dashboard & History Management (`/dashboard`, `/history`)
 - Accessible to authenticated students with Google Sign-In.
@@ -270,18 +272,18 @@ This builds both the Cloudflare Worker serverless gateway (`dist/promptwise/`) a
 
 ---
 
-## 🌐 Production Deployment
+## 🌐 Deployment
 
 Deploy the application and serverless edge functions to Cloudflare:
 ```bash
-# 1. Set production secret in Cloudflare
+# 1. Set secret in Cloudflare
 npx wrangler secret put GEMINI_API_KEY
 
 # 2. Deploy worker and client bundle
-npx wrangler deploy
+npm run deploy
 ```
 
-Live Edge URL: `https://promptwise.naseem2917.workers.dev/`
+Live Application URL: [https://promptwise.naseem2917.workers.dev/](https://promptwise.naseem2917.workers.dev/)
 
 ---
 
