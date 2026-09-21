@@ -11,7 +11,7 @@ export default defineConfig({
 		cloudflare(),
 		VitePWA({
 			registerType: 'autoUpdate',
-			includeAssets: ['favicon.ico', 'favicon.png', 'Icon.png', 'logo.png', 'pwa-192.png', 'pwa-512.png'],
+			includeAssets: ['favicon.ico', 'favicon.png', 'Icon.png', 'logo.png', 'pwa-192.png', 'pwa-512.png', 'apple-touch-icon.png'],
 			manifest: {
 				name: 'PromptWise',
 				short_name: 'PromptWise',
