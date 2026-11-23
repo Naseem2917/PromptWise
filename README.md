@@ -132,36 +132,29 @@ PromptWise incorporates a focused session persistence model across interactive s
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           PromptWise Client                             │
-│       (React 19 + TypeScript + Tailwind CSS v4 + Framer Motion)         │
-│          [ Progressive Web App with Service Worker & Caching ]          │
-└───────────────────┬─────────────────────────────────┬───────────────────┘
-                    │                                 │
-            Edge API Requests                 User Auth & Storage
-                    │                                 │
-                    ▼                                 ▼
-┌───────────────────────────────────────┐   ┌─────────────────────────────┐
-│       Cloudflare Worker Gateway       │   │        Firebase SDK         │
-│     (Single-Bundle Serverless Edge)   │   │  - Google OAuth Login       │
-│                                       │   │  - Cloud Firestore          │
-│  Endpoints:                           │   │    - Saved Prompts          │
-│  - POST /api/analyze                  │   │    - Session Sync           │
-│  - POST /api/improve                  │   │    - Student Feedback       │
-│  - GET  /api/quiz                     │   └─────────────────────────────┘
-└───────────────────┬───────────────────┘
-                    │
-            Resilient Fallbacks
-         (Lite ⇄ Mid ⇄ High Chain)
-                    │
-                    ▼
-┌───────────────────────────────────────┐
-│           Google Gemini AI            │
-│  - gemini-3.5-flash-lite  (Analyze)   │
-│  - gemini-3.6-flash       (Medium)    │
-│  - gemini-3.7-flash       (High/Deep) │
-└───────────────────────────────────────┘
+```mermaid
+graph TD
+    classDef client fill:#EFF6FF,stroke:#2563EB,stroke-width:1.5px,color:#1E40AF;
+    classDef worker fill:#EFF6FF,stroke:#1D4ED8,stroke-width:1.5px,color:#1E40AF;
+    classDef firebase fill:#EEF2FF,stroke:#6366F1,stroke-width:1.5px,color:#312E81;
+    classDef gemini fill:#F0FDF4,stroke:#059669,stroke-width:1.5px,color:#064E3B;
+
+    Client["<b>PromptWise Client (PWA)</b><br/>React 19 • TypeScript • Tailwind CSS v4 • Framer Motion<br/><i>Progressive Web App with Service Worker & Offline Cache</i>"]
+    
+    Worker["<b>Cloudflare Worker Gateway</b><br/>Single-Bundle Serverless Edge<br/>POST /api/analyze • POST /api/improve • GET /api/quiz"]
+    
+    Firebase["<b>Firebase SDK</b><br/>Google OAuth Login • Cloud Firestore<br/>Saved Prompts • Session Sync • Student Feedback"]
+    
+    Gemini["<b>Google Gemini AI Engine</b><br/>gemini-3.5-flash-lite (Analyze & Quiz)<br/>gemini-3.6-flash (Medium) • gemini-3.7-flash (Deep)"]
+
+    Client -->|Edge API Requests| Worker
+    Client -->|User Auth & Cloud Storage| Firebase
+    Worker -->|Multi-Model Failover Chain| Gemini
+
+    class Client client;
+    class Worker worker;
+    class Firebase firebase;
+    class Gemini gemini;
 ```
 
 ---
@@ -170,6 +163,13 @@ PromptWise incorporates a focused session persistence model across interactive s
 
 ```mermaid
 graph TD
+    classDef default fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1.5px,color:#0F172A;
+    classDef decision fill:#EFF6FF,stroke:#2563EB,stroke-width:1.5px,color:#1E3A8A;
+    classDef neutral fill:#F8FAFC,stroke:#64748B,stroke-width:1.5px,color:#0F172A;
+    classDef success fill:#F0FDF4,stroke:#059669,stroke-width:1.5px,color:#064E3B;
+    classDef edgeWorker fill:#EFF6FF,stroke:#1D4ED8,stroke-width:1.5px,color:#1E40AF;
+    classDef db fill:#EEF2FF,stroke:#6366F1,stroke-width:1.5px,color:#312E81;
+
     subgraph StageA["Stage A: Input Guard & Verification Loop"]
         A["User Submits Initial Input"] --> B{"Client Pre-Check: isObviousGarbage()"}
         
@@ -205,6 +205,17 @@ graph TD
         G -.->|Verified Original Prompt Stored in History| P[("Firebase Firestore Saved History: Store Verified Original Prompt + Improved Prompt (Garbage is NEVER saved)")]
         N -->|Yes| P
     end
+
+    class B,G,N decision;
+    class C,D neutral;
+    class E,F,K,L edgeWorker;
+    class M success;
+    class P db;
+
+    style StageA fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1.5px,color:#1E293B
+    style StageB fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1.5px,color:#1E293B
+    style StageC fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1.5px,color:#1E293B
+    style Storage fill:#F8FAFC,stroke:#CBD5E1,stroke-width:1.5px,color:#1E293B
 ```
 
 ---
